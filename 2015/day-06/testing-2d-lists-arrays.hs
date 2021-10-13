@@ -18,6 +18,13 @@ smallList = createGrid 4 4
 -- [False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False]
 
 -- modifySquare :: (Bool -> Bool) -> [Bool] -> (Int,Int) -> (Int,Int) -> [Bool]
--- modifySquare func list rowSize (sx,sy) (ex,ey) = 
+modifySquare func rowSize list start end =
+    recurse [] func rowSize list start end 0
+    where
+        recurse :: [Bool] -> (Bool -> Bool) -> Int -> [Bool] -> (Int,Int) -> (Int,Int) -> Int -> [Bool]
+        recurse acc _ _ [] _ _ _ = acc
+        recurse acc func rowSize (next:list) (sx,sy) (ex,ey) pos -- recurse (nextResult:acc) func rowSize list
+            | 
 
--- >>> 
+-- >>> 12 `div` 5
+-- 2
