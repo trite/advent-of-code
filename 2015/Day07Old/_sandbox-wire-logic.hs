@@ -121,7 +121,7 @@ isSolved (Value _) = True
 isSolved _         = False
 
 getNext :: WireMap -> (WireMap, Int)
-getNext wireMap = (nextMap, size nextMap)
+getNext wireMap = (nextMap, size $ Data.Map.filter isSolved nextMap)
     where
         nextMap = Data.Map.map (solveWire wireMap) wireMap
 

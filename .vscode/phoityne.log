@@ -1,0 +1,12 @@
+2021-10-31 09:14:20 [ThreadId 3] ERROR phoityne - load file fail.[C:/Git/advent-of-code/test/Spec.hs]
+2021-10-31 09:14:20 [ThreadId 3] ERROR phoityne - startup load error. C:/Git/advent-of-code/test/Spec.hs
+
+2021-10-31 09:16:11 [ThreadId 3] ERROR phoityne - load file fail.[C:/Git/advent-of-code/test/Spec.hs]
+2021-10-31 09:16:11 [ThreadId 3] ERROR phoityne - startup load error. C:/Git/advent-of-code/test/Spec.hs
+
+2021-10-31 09:16:30 [ThreadId 3] ERROR phoityne - load file fail.[C:/Git/advent-of-code/test/Spec.hs]
+2021-10-31 09:16:30 [ThreadId 3] ERROR phoityne - startup load error. C:/Git/advent-of-code/test/Spec.hs
+
+2021-10-31 09:18:27 [ThreadId 3] ERROR phoityne - ghci launch error. <file descriptor: 5>: hPutChar: resource vanished (Broken pipe)
+
+2021-10-31 09:18:27 [ThreadId 3] ERROR phoityne - [disconnectRequestHandler] ghci not started.
