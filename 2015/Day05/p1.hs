@@ -6,7 +6,7 @@ False
 >>> 'a' `elem` ['a','e','i','o','u']
 True
 -}
-vowels :: [Char] -> Bool
+vowels :: String -> Bool
 vowels str = length (filter (`elem` ['a','e','i','o','u']) str) >= 3
 {-
 >>> vowels "aei"
@@ -15,10 +15,10 @@ True
 [True,True,True,False,False,False,False]
 -}
 
-doubleLetter :: [Char] -> Bool
+doubleLetter :: String -> Bool
 doubleLetter (x:str) = recurse x str
     where
-        recurse :: Char -> [Char] -> Bool
+        recurse :: Char -> String -> Bool
         recurse _ [] = False
         recurse p (c:rest)
             | p == c    = True
@@ -40,10 +40,10 @@ False
 -}
 
 -- TODO: Figure out if there's a built-in fold method to abstract out dealBreakers and doubleLetter
-dealBreakers :: [Char] -> Bool
+dealBreakers :: String -> Bool
 dealBreakers (x:str) = recurse x str
     where
-        recurse :: Char -> [Char] -> Bool
+        recurse :: Char -> String -> Bool
         recurse _ [] = True
         recurse p (c:rest)
             | dealBreaker (p, c) = False
@@ -55,7 +55,7 @@ True
 [True,True,True,False,False,False,True]
 -}
 
-valid :: [Char] -> Bool
+valid :: String -> Bool
 valid str = all ($ str) [vowels, doubleLetter, dealBreakers]
 {-
 >>> map valid ["ugknbfddgicrmopn","jchzalrnumimnmhp","haegwjzuvuyypxyu","dvszwmarrgswjxmb"]

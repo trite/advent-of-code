@@ -62,10 +62,10 @@ toggleSquare :: [Bool] -> (Int, Int) -> (Int, Int) -> [Bool]
 toggleSquare = toggle rowSize
 
 
--- join :: [Char] -> Char -> [Char]
+-- join :: String -> Char -> String
 -- join (str:rest) c = recurse str rest c
 --     where
---         recurse :: [[Char]] -> [[Char]] -> Char -> [Char]
+--         recurse :: [String] -> [String] -> Char -> String
 --         recurse acc []         _ = acc
 --         recurse acc (str:rest) c = recurse (acc ++ [c] ++ show str) rest c
 
@@ -73,12 +73,12 @@ join' :: (Show a) => String -> String -> a -> String
 join' str split toJoin = str ++ split ++ show toJoin
 
 
-join :: (Show a) => [a] -> [Char] -> [Char]
+join :: (Show a) => [a] -> String -> String
 join []       []      = error "why?!"
 join []       (_:_)   = error "also why?!"
 join (x:rest) between = recurse (show x) rest between
     where
-        recurse :: (Show a) => [Char] -> [a] -> [Char] -> [Char]
+        recurse :: (Show a) => String -> [a] -> String -> String
         recurse acc []       _       = acc
         recurse acc (x:rest) between = recurse (acc ++ between ++ show x) rest between
 

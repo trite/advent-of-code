@@ -1,14 +1,14 @@
 splitOn' :: [String] -- ^ accList - previous accumulations
-  -> [Char] -- ^ acc - current accumulator
+  -> String -- ^ acc - current accumulator
   -> Char -- ^ split - character to split on
-  -> [Char] -- ^ rest
+  -> String -- ^ rest
   -> [String]
 splitOn' accList acc _ [] = reverse $ reverse acc:accList
 splitOn' accList acc split (x:rest)
     | split == x = splitOn' (reverse acc:accList) [] split rest
     | otherwise  = splitOn' accList (x:acc) split rest
 
-splitOn :: Char -> [Char] -> [String]
+splitOn :: Char -> String -> [String]
 splitOn = splitOn' [] []
 
 -- >>> splitOn 'x' "123x2x234"
@@ -30,7 +30,7 @@ area other = error "You're doing it wrong!"
 -- >>> area $ map intify $ splitOn 'x' "2x3x4"
 -- 58
 
-calc :: [Char] -> Int
+calc :: String -> Int
 calc str = area $ map intify $ splitOn 'x' str
 
 -- >>> calc "2x3x4"

@@ -15,27 +15,27 @@ modifyCell func start end rowSize cell pos
             sy <= (pos `mod` rowSize) &&
             (pos `mod` rowSize) <= ey
 
-splitOn :: Char -> [Char] -> [String]
+splitOn :: Char -> String -> [String]
 splitOn = splitOn' [] []
     where
         splitOn' :: [String] -- ^ accList - previous accumulations
-            -> [Char]        -- ^ acc - current accumulator
+            -> String        -- ^ acc - current accumulator
             -> Char          -- ^ split - character to split on
-            -> [Char]        -- ^ rest of the string
+            -> String        -- ^ rest of the string
             -> [String]
         splitOn' accList acc _ [] = reverse $ reverse acc:accList
         splitOn' accList acc split (x:rest)
             | split == x = splitOn' (reverse acc:accList) [] split rest
             | otherwise  = splitOn' accList (x:acc) split rest
 
-parseNumbers :: [Char] -> (Int, Int)
+parseNumbers :: String -> (Int, Int)
 parseNumbers = pair . splitOn ','
     where pair [x,y] = (read x, read y)
 
 rowSize :: Int
 rowSize = 1000
 
-spaceSplit :: [Char] -> [String]
+spaceSplit :: String -> [String]
 spaceSplit = splitOn ' '
 
 parseToFunc :: [String] -> Bool -> Int -> Bool
@@ -47,7 +47,7 @@ parseToFunc (x:y:rest)
     where
         runRest func [n1,_,n2] = modifyCell func (parseNumbers n1) (parseNumbers n2) rowSize
 
-parseToFuncs :: [[Char]] -> [Bool -> Int -> Bool]
+parseToFuncs :: [String] -> [Bool -> Int -> Bool]
 parseToFuncs = map (parseToFunc . spaceSplit)
 
 runOnCell :: [Bool -> Int -> Bool] -> (Bool,Int) -> Bool
@@ -57,10 +57,10 @@ runOnCell (f:rest) (cell,pos) = runOnCell rest (f cell pos, pos)
 calcAllCells :: [Bool -> Int -> Bool] -> [Bool]
 calcAllCells funcs = [runOnCell funcs (False, x) | x <- [1 .. 1000000]]
 
-parseToCells :: [[Char]] -> [Bool]
+parseToCells :: [String] -> [Bool]
 parseToCells = calcAllCells . parseToFuncs
 
-runAll :: [[Char]] -> Int
+runAll :: [String] -> Int
 runAll = length . filter (== True) . parseToCells
 
 main = do

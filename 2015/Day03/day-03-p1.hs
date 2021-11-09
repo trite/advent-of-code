@@ -36,7 +36,7 @@ testing2 = moveTo (moveCalc (0,0) '^') (M.fromList [((0,0), 2), ((0,1), 7)])
 
 loop' :: M.Map (Integer, Integer) Integer -- ^ Move list
     -> (Integer, Integer) -- ^ Current position
-    -> [Char] -- ^ Remaining moves
+    -> String -- ^ Remaining moves
     -> M.Map (Integer, Integer) Integer
 loop' prevMoves _ [] = prevMoves
 loop' prevMoves pos (x:rest) = loop' (moveTo newPos prevMoves) newPos rest

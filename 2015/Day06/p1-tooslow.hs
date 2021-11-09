@@ -37,20 +37,20 @@ toggle = modifySquare not rowSize
 
 
 
-splitOn :: Char -> [Char] -> [String]
+splitOn :: Char -> String -> [String]
 splitOn = splitOn' [] []
     where
         splitOn' :: [String] -- ^ accList - previous accumulations
-            -> [Char]        -- ^ acc - current accumulator
+            -> String        -- ^ acc - current accumulator
             -> Char          -- ^ split - character to split on
-            -> [Char]        -- ^ rest of the string
+            -> String        -- ^ rest of the string
             -> [String]
         splitOn' accList acc _ [] = reverse $ reverse acc:accList
         splitOn' accList acc split (x:rest)
             | split == x = splitOn' (reverse acc:accList) [] split rest
             | otherwise  = splitOn' accList (x:acc) split rest
 
-parseNumbers :: [Char] -> (Int, Int)
+parseNumbers :: String -> (Int, Int)
 parseNumbers = pair . splitOn ','
     where pair [x,y] = (read x, read y)
 -- >>> map parseNumbers ["0,0", "123,234", "999,999"]
@@ -85,7 +85,7 @@ testValues = ["turn on 0,0 through 999,999", "toggle 0,0 through 999,0", "turn o
 testing123 = map (runLightsChange testGrid . splitOn ' ') testValues
 testing234 = runLightsChange testGrid . splitOn ' ' $ "turn on 0,0 through 999,999"
 
-parseLineAndRun :: [Bool] -> [Char] -> [Bool]
+parseLineAndRun :: [Bool] -> String -> [Bool]
 parseLineAndRun lights = runLightsChange lights . splitOn ' '
 
 runAll cmds = length $ filter (== True) $ foldl parseLineAndRun testGrid cmds

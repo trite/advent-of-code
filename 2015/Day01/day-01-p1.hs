@@ -1,6 +1,6 @@
 import Data.Map
 
-testing :: Map [Char] Int
+testing :: Map String Int
 testing = fromList [ ("(())", 0)
                    , ("()()", 0)
                    , ("(((", 3)

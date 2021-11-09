@@ -20,13 +20,13 @@ testValues = ["turn on 0,0 through 999,999", "toggle 0,0 through 999,0", "turn o
 
 
 
-splitOn :: Char -> [Char] -> [String]
+splitOn :: Char -> String -> [String]
 splitOn = splitOn' [] []
     where
         splitOn' :: [String] -- ^ accList - previous accumulations
-            -> [Char]        -- ^ acc - current accumulator
+            -> String        -- ^ acc - current accumulator
             -> Char          -- ^ split - character to split on
-            -> [Char]        -- ^ rest of the string
+            -> String        -- ^ rest of the string
             -> [String]
         splitOn' accList acc _ [] = reverse $ reverse acc:accList
         splitOn' accList acc split (x:rest)

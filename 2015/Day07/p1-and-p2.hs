@@ -47,6 +47,8 @@ solveWire :: WireMap -> Wire -> Wire
 solveWire wireMap (Value val) = Value val
 solveWire wireMap (Pending x) = wirePending (Pending x) (lookup x wireMap)
 solveWire wireMap (NeedOne func x) = wireApply2 (NeedOne func x) func (lookup x wireMap)
+-- For dealing with entries such as "1 AND gd -> ge"
+solveWire wireMap (NeedTwo func "1" y) = wireApply3 (NeedTwo func "1" y) func (Just $ Value 1) (lookup y wireMap)
 solveWire wireMap (NeedTwo func x y) = wireApply3 (NeedTwo func x y) func (lookup x wireMap) (lookup y wireMap)
 
 isUnsolved :: Wire -> Bool
@@ -64,9 +66,10 @@ solveWireMap :: WireMap -> WireMap
 solveWireMap wireMap = recurse wireMap 0
     where
         recurse wireMap lastSize
-            -- -| nextSize == lastSize     = error "Circular dependency"
-            | nextSize == 0            = nextWireMap
-            | otherwise                = recurse nextWireMap nextSize
+            -- -| nextSize == lastSize = error $ concat ["Circular reference. nextSize: [", show nextSize, "] lastSize: [", show lastSize, "]"]
+            | nextSize == lastSize = error $ show wireMap
+            | nextSize == 0        = nextWireMap
+            | otherwise            = recurse nextWireMap nextSize
                 where
                     (nextWireMap, nextSize) = getNext wireMap
 
@@ -104,29 +107,28 @@ parseWireParts strs
     | length strs == 3 = parseWireParts3 strs
     | length strs == 4 = parseWireParts4 strs
     | length strs == 5 = parseWireParts5 strs
-    | otherwise        = error "You done messed up now... FIX IT!"
+    | otherwise        = error "Unexpected number of arguments"
 
 parseWireParts3 :: [String] -> (String, Wire)
 parseWireParts3 [val, _, name] =
     case readMaybe val of
         Just wordVal -> (name, Value wordVal)
         Nothing      -> (name, Pending val)
-        
-parseWireParts3 _              = error "OH NOES"
+    -- maybe (name, Pending val) (\wordVal -> (name, Value wordVal)) (readMaybe val) 
+parseWireParts3 _              = error "Called parseWireParts3 with the wrong number of arguments?"
 
 parseWireParts4 :: [String] -> (String, Wire)
 parseWireParts4 ["NOT", x, _, name] = (name, NeedOne complement x)
-parseWireParts4 _                   = error "OH NOES"
+parseWireParts4 _                   = error "Called parseWireParts4 with the wrong number of arguments?"
 
 parseWireParts5 :: [String] -> (String, Wire)
 parseWireParts5 [x, "AND",    y, _, name] = (name, NeedTwo (.&.) x y)
 parseWireParts5 [x, "OR",     y, _, name] = (name, NeedTwo (.|.) x y)
 parseWireParts5 [x, "LSHIFT", y, _, name] = (name, NeedOne (`shiftL` read y) x)
 parseWireParts5 [x, "RSHIFT", y, _, name] = (name, NeedOne (`shiftR` read y) x)
-parseWireParts5 _ = error "OH NOES"
+parseWireParts5 _ = error "Called parseWireParts5 with the wrong number of arguments?"
 
 -- Sanity check
-
 toParse :: [String]
 toParse = [
     "123 -> x",
@@ -141,12 +143,28 @@ toParse = [
 -- >>> solveWireMap $ parseWires toParse
 -- fromList [("d",72),("e",507),("f",492),("g",114),("h",65412),("i",65079),("x",123),("y",456)]
 
+
+
+
+-- Solving part 1:
+
+-- main = do
+--     contents <- readFile "input.txt"
+--     let solvedMap = solveWireMap $ parseWires $ lines contents
+--     let result = lookup "a" solvedMap
+--     return result
+
+-- Result: 46065
+
+
+
+
+-- Solving part 2:
+
 main = do
-    contents <- readFile "input.txt"
+    contents <- readFile "input_p2.txt"
     let solvedMap = solveWireMap $ parseWires $ lines contents
     let result = lookup "a" solvedMap
-    -- let result = lines contents
-    -- let wireMap = parseWires $ lines contents
-    -- let result = Data.Map.map (solveWire wireMap) wireMap
-    -- let result = solveWireMap $ parseWires $ lines contents
     return result
+
+-- Result: 14134
