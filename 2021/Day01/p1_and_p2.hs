@@ -32,7 +32,7 @@ main = do
     contents <- readFile "input.txt"
     let result = count $ pair $ trip $ map (\x -> read x :: Int) $ lines contents
     return result
-
+-- answer: 1706
 
 -- Part 1:
 -- main = do
