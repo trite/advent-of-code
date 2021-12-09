@@ -53,8 +53,7 @@ main = do
     contents <- readFile "input.txt"
     let result = toString $ processList $ map (splitOn ' ') $ lines contents
     return result
-
-
+-- Answer: 1544000595 -- "Horizontal position: 1905 Depth: 810499 Calculated result: 1544000595 Aim: 907"
 
 
 
@@ -71,7 +70,7 @@ main = do
     "Horizontal position: 5 Depth: 0 Calculated result: 0 Aim: 5",
     "Horizontal position: 5 Depth: 0 Calculated result: 0 Aim: 0"]
 
-    // Accidentally calculating using height instead of height change: dep = d + (h * toInt x)
+    // Accidentally calculating with horizontal instead of aim: dep = d + (h * toInt x)
     "Horizontal position: 15 Depth: 66 Calculated result: 990 Aim: 10",
     "Horizontal position: 13 Depth: 40 Calculated result: 520 Aim: 10",
     "Horizontal position: 13 Depth: 40 Calculated result: 520 Aim: 2",
