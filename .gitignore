@@ -102,3 +102,6 @@ bench.html
 
 # Emacs
 .projectile
+
+.fake
+.ionide

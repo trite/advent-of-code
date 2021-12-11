@@ -27,17 +27,23 @@ toString pos@Pos {hor = h, dep = d} = "Horizontal position: " ++ show h ++ " Dep
 -- instance Show Pos where
 --     show {hor, dep} = show "hor: " ++ hor ++ " dep: " ++ dep
 
-process :: String -> String -> Pos -> Pos
-process "forward" x pos@Pos {hor = h} = pos {hor = h + (read x :: Int)}
-process "down"    x pos@Pos {dep = d} = pos {dep = d + (read x :: Int)}
-process "up"      x pos@Pos {dep = d} = pos {dep = d - (read x :: Int)}
+-- process :: String -> String -> Pos -> Pos
+-- process "forward" x pos@Pos {hor = h} = pos {hor = h + (read x :: Int)}
+-- process "down"    x pos@Pos {dep = d} = pos {dep = d + (read x :: Int)}
+-- process "up"      x pos@Pos {dep = d} = pos {dep = d - (read x :: Int)}
+-- process _ _ _ = error "Missed something with processing"
+
+process :: String -> Int -> Pos -> Pos
+process "forward" x pos@Pos {hor = h} = pos {hor = h + x}
+process "down"    x pos@Pos {dep = d} = pos {dep = d + x}
+process "up"      x pos@Pos {dep = d} = pos {dep = d - x}
 process _ _ _ = error "Missed something with processing"
 
 processList :: [[String]] -> Pos
 processList list = run Pos {hor = 0, dep = 0} list 
     where
         run pos [] = pos
-        run pos ([way,dist]:rest) = run (process way dist pos) rest
+        run pos ([way,dist]:rest) = run (process way (read dist :: Int) pos) rest
         run _ _ = error "Missed something with processList"
 -- >>> toString $ processList $ map (splitOn ' ') testList
 -- "Horizontal position: 15 Depth: 10 Calculated result: 150"
