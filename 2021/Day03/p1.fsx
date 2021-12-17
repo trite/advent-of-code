@@ -1,3 +1,6 @@
+open System
+
+
 let writeLine (o : obj) =
     System.Console.WriteLine(o)
 
@@ -18,7 +21,7 @@ let convert lst =
         >> List.map charToInt
     )
 
-let testList =
+let rawTestList =
     [
         "00100"
         "11110"
@@ -33,6 +36,9 @@ let testList =
         "00010"
         "01010"
     ]
+
+let testList =
+    rawTestList
     |> convert
 
 let hasMore lst =
@@ -50,7 +56,7 @@ let compactify lst =
     (List.map fst lst, List.map snd lst)
 
 let pop lst =
-    testList
+    lst
     |> List.map tuplify
     |> compactify
 
@@ -67,6 +73,9 @@ let getGamma lst =
 let nextPart (lst : int list, rest : int list list) =
     (getGamma lst, rest)
 
+type Next =
+    | Done of int list
+    | More of int list * int list list
 
 let inner lst acc =
     let result =
@@ -74,20 +83,75 @@ let inner lst acc =
         |> hasMore
         |> Option.map pop
         |> Option.map nextPart
-    writeLine result
-    result
-    // match result with
-    // | None -> List.rev acc
-    // | Some (gamma, rest) -> inner rest (gamma::acc)
+    match result with
+    | None -> Done acc
+    | Some (gamma, rest) -> More (gamma::acc, rest)
+    // writeLine result
+    // result
 
-let run x =
-    inner x []
+let rec run' lst acc =
+    match inner lst acc with
+    | Done result      -> List.rev result
+    | More (acc, rest) -> run' rest acc
 
-// run testList
+let toChar (i : int) =
+    i.ToString().[0]
 
-let x = inner testList []
-let y = Option.map (fun (g, rest) -> inner rest g) x 
-x
-testList
+let run lst = run' lst []
 
-// Option.map (fun (g, rest) -> rest) x
+let gammaRaw = run testList
+
+let toMeasurement raw =
+    raw
+    |> List.map toChar
+    |> List.toArray
+    |> (fun x -> String x)
+    |> (fun x -> Convert.ToInt32(x, 2))
+
+let gamma = 
+    gammaRaw
+    |> toMeasurement
+
+let flip (lst : int list) =
+    lst
+    |> List.map (fun x ->
+        match x with
+        | 0 -> 1
+        | 1 -> 0
+        | _ -> failwith "Bad assumption in flip, this shouldn't be possible!"
+    )
+
+let epsilon =
+    gammaRaw
+    |> flip
+    |> toMeasurement
+
+$"Gamma  : {gamma}"
+$"Epsilon: {epsilon}"
+$"Result : {gamma * epsilon}"
+
+let solve (lst : string list) =
+    let gammaRaw =
+        lst
+        |> convert
+        |> run
+
+    let gamma = 
+        gammaRaw
+        |> toMeasurement 
+
+    let epsilon =
+        gammaRaw
+        |> flip
+        |> toMeasurement
+
+    gamma * epsilon
+
+solve rawTestList
+
+let inputList =
+    System.IO.File.ReadLines("2021\\Day03\\input.txt")
+    |> Seq.toList
+
+solve inputList
+// answer: 3985686
