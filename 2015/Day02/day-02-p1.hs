@@ -1,3 +1,5 @@
+{-# ANN module "HLint: ignore Eta reduce" #-}
+
 splitOn' :: [String] -- ^ accList - previous accumulations
   -> String -- ^ acc - current accumulator
   -> Char -- ^ split - character to split on
@@ -9,7 +11,7 @@ splitOn' accList acc split (x:rest)
     | otherwise  = splitOn' accList (x:acc) split rest
 
 splitOn :: Char -> String -> [String]
-splitOn = splitOn' [] []
+splitOn split list = splitOn' [] [] split list
 
 -- >>> splitOn 'x' "123x2x234"
 -- ["123","2","234"]
