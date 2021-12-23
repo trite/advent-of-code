@@ -1,4 +1,5 @@
 import Data.Map
+{-# ANN module "HLint: ignore Eta reduce" #-}
 
 testing :: Map String Int
 testing = fromList [ ("(())", 0)
@@ -12,13 +13,13 @@ testing = fromList [ ("(())", 0)
                    , (")())())", -3) ]
 
 charCount :: Char -> String -> Int
-charCount chr str = length (Prelude.filter (== chr) str)
+charCount chr str = length $ Prelude.filter (== chr) str
 
 lParen :: String -> Int
-lParen = charCount '('
+lParen str = charCount '(' str
 
 rParen :: String -> Int
-rParen = charCount ')'
+rParen str = charCount ')' str
 
 floorNum :: String -> Int
 floorNum str = lParen str - rParen str

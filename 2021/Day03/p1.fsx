@@ -1,11 +1,7 @@
 open System
 
-
 let writeLine (o : obj) =
     System.Console.WriteLine(o)
-
-let simpleRaise str =
-    raise (System.Exception(str))
 
 let toCharArray (str : string) =
     str.ToCharArray()
@@ -50,7 +46,7 @@ let hasMore lst =
 let tuplify lst =
     match lst with
     | x::rest -> (x,rest)
-    | _ -> simpleRaise "Bad assumption about tuplify"
+    | _ -> failwith "Bad assumption about tuplify"
 
 let compactify lst =
     (List.map fst lst, List.map snd lst)
