@@ -1,3 +1,8 @@
+type Callouts = Callouts of int list
+type Row = Row of int list
+type Board = Board of Row list
+type Boards = Boards of Board list
+
 let testInput = """7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
 
 22 13 17 11  0
@@ -18,8 +23,12 @@ let testInput = """7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,
 22 11 13  6  5
  2  0 12  3  7"""
 
+let split (c : char) (str : string) =
+    str.Split c
+
 let testList =
-    testInput.Split '\n'
+    testInput
+    |> split '\n'
     |> List.ofArray
 
 // Not sure the best approach here, borrowing from how I ended up splitting strings in haskell (2015 day 2 part 1)
@@ -37,26 +46,34 @@ let splitOn split lst =
 
 splitOn "" testList
 |> List.splitAt 1
-|> fun (x,y) ->
-    let callouts = (x |> List.head |> List.head).Split ','
-    callouts
+|> fun (cRaw,bRaw) ->
+    let callouts =
+        cRaw            // string list list
+        |> List.head    // string list
+        |> List.head    // string
+        |> split ','    // string array
+        |> Array.toList // string list
+        |> List.map int
+        |> Callouts
 
-splitOn "" testList
-|> List.splitAt 1
-|> fun (x,y) ->
-    y
-    |> List.map (
-        fun il ->
+    let boards =
+        bRaw
+        |> List.map (
             List.map (
-                fun lst ->
-                    // this feels like a terrible way to go...
-                    // TODO: pick up here, try to make this suck less if possible too
+                split ' '
+                >> Array.toList
+                >> List.filter (fun x -> x <> "")
+                >> List.map int
+                >> Row
             )
+            >> Board
+        )
+        |> Boards
 
-    )
+    (callouts, boards)
 
 
-//     let split = splitOn "" lst
-
-        // |> List.splitAt 1
-        // |> fun (x,y) -> (List.head x, y)
+let printRow (row : Row) =
+    row
+    |> List.map (fun (x : int) -> x.ToString)
+    // |> List.intercalate " "
