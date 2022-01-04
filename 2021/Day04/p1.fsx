@@ -1,5 +1,5 @@
 type Callouts = Callouts of int list
-type Row = Row of int list
+type Row = Row of Map<int, bool>
 type Board = Board of Row list
 type Boards = Boards of Board list
 
@@ -25,18 +25,20 @@ let testInput = """7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,
 
 let split (c : char) (str : string) =
     str.Split c
+    |> Array.toList
 
 let testList =
     testInput
     |> split '\n'
-    |> List.ofArray
 
 // Not sure the best approach here, borrowing from how I ended up splitting strings in haskell (2015 day 2 part 1)
 /// Split a string list into sub-lists, splitting on the specified string
 let splitOn split lst =
     let rec splitOn' accList acc split (lst : string list) =
         match lst with
-        | []    -> (List.rev acc)::accList |> List.rev
+        | [] ->
+            (List.rev acc)::accList
+            |> List.rev
         | x::xs ->
             if split = x then
                 splitOn' (List.rev acc::accList) [] split xs
@@ -44,36 +46,58 @@ let splitOn split lst =
                 splitOn' accList (x::acc) split xs
     splitOn' [] [] split lst
 
-splitOn "" testList
-|> List.splitAt 1
-|> fun (cRaw,bRaw) ->
-    let callouts =
-        cRaw            // string list list
-        |> List.head    // string list
-        |> List.head    // string
-        |> split ','    // string array
-        |> Array.toList // string list
-        |> List.map int
-        |> Callouts
+let boardify (lst : string list) =
+    splitOn "" lst
+    |> List.splitAt 1
+    |> fun (cRaw,bRaw) ->
+        let callouts =
+            cRaw
+            |> List.head
+            |> List.head
+            |> split ','
+            |> List.map int
+            |> Callouts
 
-    let boards =
-        bRaw
-        |> List.map (
-            List.map (
-                split ' '
-                >> Array.toList
-                >> List.filter (fun x -> x <> "")
-                >> List.map int
-                >> Row
+        let boards =
+            bRaw
+            |> List.map (
+                List.map (
+                    split ' '
+                    >> List.filter (fun x -> x <> "")
+                    >> List.map (fun x -> (int x, false))
+                    >> Map.ofList
+                    >> Row
+                )
+                >> Board
             )
-            >> Board
-        )
-        |> Boards
+            |> Boards
 
-    (callouts, boards)
+        (callouts, boards)
 
+let advanceBoards (boards : Board list) (callout : int) =
+    boards
+    |> List.map (
+        fun (Board board : Board) ->
+            board
+            |> List.map (
+                // Map.change callout (Option.map (fun _ -> true))
+                // >> Row
+                fun (Row row : Row) ->
+                    row
+                    |> Map.change callout (Option.map (fun _ -> true))
+                    |> Row
+            )
+    )
 
-let printRow (row : Row) =
-    row
-    |> List.map (fun (x : int) -> x.ToString)
-    // |> List.intercalate " "
+let (Callouts callouts, Boards boards) = boardify testList
+
+callouts
+|> List.head
+|> advanceBoards boards
+
+// TODO:
+// * Add logic to check if a board has won
+// * Run till a board wins (advance -> check -> repeat)
+// * Calculate the answer for the winning board
+// * ???
+// * Profit
