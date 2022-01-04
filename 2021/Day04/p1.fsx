@@ -1,5 +1,5 @@
 type Callouts = Callouts of int list
-type Row = Row of Map<int, bool>
+type Row = Row of (int * bool) list
 type Board = Board of Row list
 type Boards = Boards of Board list
 
@@ -33,10 +33,11 @@ let testList =
 
 // Not sure the best approach here, borrowing from how I ended up splitting strings in haskell (2015 day 2 part 1)
 /// Split a string list into sub-lists, splitting on the specified string
-let splitOn split lst =
+let splitOn (split : string) (lst : string list) =
     let rec splitOn' accList acc split (lst : string list) =
         match lst with
         | [] ->
+            // TODO: Is there a way to handle this without reversing lists so frequently?
             (List.rev acc)::accList
             |> List.rev
         | x::xs ->
@@ -46,7 +47,8 @@ let splitOn split lst =
                 splitOn' accList (x::acc) split xs
     splitOn' [] [] split lst
 
-let boardify (lst : string list) =
+/// Parses input info into a callout list and a board list
+let parse (lst : string list) =
     splitOn "" lst
     |> List.splitAt 1
     |> fun (cRaw,bRaw) ->
@@ -65,7 +67,6 @@ let boardify (lst : string list) =
                     split ' '
                     >> List.filter (fun x -> x <> "")
                     >> List.map (fun x -> (int x, false))
-                    >> Map.ofList
                     >> Row
                 )
                 >> Board
@@ -74,26 +75,114 @@ let boardify (lst : string list) =
 
         (callouts, boards)
 
-let advanceBoards (boards : Board list) (callout : int) =
+let advanceBoards (Boards boards : Boards) (callout : int) =
     boards
     |> List.map (
         fun (Board board : Board) ->
             board
             |> List.map (
-                // Map.change callout (Option.map (fun _ -> true))
-                // >> Row
                 fun (Row row : Row) ->
                     row
+                    |> Map.ofList
                     |> Map.change callout (Option.map (fun _ -> true))
+                    |> Map.toList
                     |> Row
             )
+            |> Board
     )
+    |> Boards
 
-let (Callouts callouts, Boards boards) = boardify testList
+let checkBoards (Boards boards : Boards) =
+    let checkBoard (Board board : Board) =
+        let isEmpty lst =
+            (List.length lst) = 0
 
-callouts
-|> List.head
-|> advanceBoards boards
+        let called (_, b : bool) =
+            b
+
+        let winners (x : (int * bool) list) =
+            x
+            |> List.filter called
+            |> isEmpty
+
+        // this is only needed to deal with the type setup I created
+        // is there a better way to handle the types to skip work like this?
+        // might also be able to skip lots of the "boxing" steps (|> Boards)
+        let extract (Row row : Row) =
+            row
+
+        let checkRows =
+            board
+            |> List.map extract
+            |> List.filter winners
+            |> isEmpty
+
+        let checkCols =
+            board
+            |> List.map extract
+            |> List.transpose
+            |> List.filter winners
+            |> isEmpty
+        
+        checkRows || checkCols
+        
+    boards
+    |> List.filter checkBoard
+    |> fun boards ->
+        if (List.length boards) = 0 then
+            None
+        else
+            Some (boards |> List.head)
+
+let (Callouts callouts, boards) = parse testList
+
+// callouts
+// |> List.head
+// |> advanceBoards boards
+// |> checkBoards
+
+// Wonder which approach is more idiomatic.
+// Taking tupled input avoids ||> or other extra steps, so going with it for now.
+// let runGame (Callouts callouts : Callouts) (Boards boards : Boards) =
+let runGame ((Callouts callouts : Callouts),(Boards boards : Boards)) =
+    let calcScore (Board board : Board) (lastCallout : int) =
+        let boardSum =
+            board
+            |> List.sumBy (
+                fun (Row row : Row) ->
+                    row
+                    |> List.sumBy (
+                        fun (num : int, b : bool) ->
+                            if b then
+                                num
+                            else
+                                0
+                    )
+            )
+        boardSum * lastCallout
+
+    let sanityCheck (lst : 'a list) =
+        match lst with
+        | [] -> failwith "callout list is empty before it should be, check your logic!"
+        | _  -> lst
+
+    let rec runGame' ((callout : int) :: (rest : int list)) (boards : Boards) =
+        let newBoards =
+            advanceBoards boards callout
+        
+        match checkBoards newBoards with
+        | None -> runGame' (sanityCheck rest) newBoards
+        | Some winningBoard -> calcScore winningBoard callout
+
+    boards
+    |> sanityCheck
+    |> Boards // I believe needing this is another symptom of my choice of types, can I make it suck less?
+    |> runGame' callouts
+
+testList
+|> parse
+// ||> runGame
+|> runGame
 
 // TODO:
 // * Add logic to check if a board has won
