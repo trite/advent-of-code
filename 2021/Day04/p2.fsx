@@ -31,6 +31,10 @@ let testList =
     testInput
     |> split '\n'
 
+type NextAction =
+    | Continue of Boards
+    | Solved of Board
+
 // Not sure the best approach here, borrowing from how I ended up splitting strings in haskell (2015 day 2 part 1)
 /// Split a string list into sub-lists, splitting on the specified string
 let splitOn (split : string) (lst : string list) =
@@ -130,19 +134,26 @@ let checkBoards (Boards boards : Boards) =
         let result =
             checkRows || checkCols
 
-        if (result) then
-            printfn $"result was true, here's the board: {board}"
-            printfn $"checkRows: {checkRows} checkCols: {checkCols}"
+        // if (result) then
+        //     printfn $"result was true, here's the board: {board}"
+        //     printfn $"checkRows: {checkRows} checkCols: {checkCols}"
 
         result
         
-    boards
-    |> List.filter checkBoard
-    |> fun boards ->
-        if (List.length boards) = 0 then
-            None
-        else
-            Some (boards |> List.head)
+    let remainingBoards =
+        boards
+        |> List.filter (checkBoard >> not)
+
+    printfn $"remaining boards: {remainingBoards}"
+
+    if (List.length remainingBoards) = 1 then
+        remainingBoards
+        |> List.head
+        |> Solved
+    else
+        remainingBoards
+        |> Boards
+        |> Continue
 
 let (Callouts callouts, boards) = parse testList
 
@@ -178,12 +189,10 @@ let runGame ((Callouts callouts : Callouts),(Boards boards : Boards)) =
         | _  -> lst
 
     let rec runGame' ((callout : int) :: (rest : int list)) (boards : Boards) =
-        let newBoards =
-            advanceBoards boards callout
-        
-        match checkBoards newBoards with
-        | None -> runGame' (sanityCheck rest) newBoards
-        | Some winningBoard -> calcScore winningBoard callout
+        match advanceBoards boards callout |> checkBoards with
+        | Continue winnersRemoved -> runGame' (sanityCheck rest) winnersRemoved
+        | Solved winningBoard -> calcScore winningBoard callout
+
 
     boards
     |> sanityCheck
@@ -192,12 +201,20 @@ let runGame ((Callouts callouts : Callouts),(Boards boards : Boards)) =
 
 testList
 |> parse
-// ||> runGame
 |> runGame
+// "161 * 16 = 2576"
+// "142 * 6 = 852"
+// I can only seem to get it to properly run on the iteration before or after the correct one for this part for some reason:
+// Correct answer for this part: 148 * 13 = 1924
 
 
-System.IO.File.ReadLines("2021\\Day04\\input.txt")
-|> Seq.toList
-|> parse
-|> runGame
-// answer: 766 * 95 = 72770
+
+
+
+
+// when ready to run:
+// System.IO.File.ReadLines("2021\\Day04\\input.txt")
+// |> Seq.toList
+// |> parse
+// |> runGame
+// // answer: 766 * 95 = 72770
