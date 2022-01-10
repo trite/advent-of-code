@@ -184,21 +184,21 @@ let advanceBoard (callout : int) (board : Board) =
         |> Unfinished
 
 let checkBoard (callout : int) (board : Board) =
-    let isCalled (cell : Cell) =
+    let isUncalled (cell : Cell) =
         match cell with
-        | Called _ -> true
-        | Uncalled _ -> false
+        | Called _ -> false
+        | Uncalled _ -> true
 
     let checkRows (rows : Row list) =
         let hor =
             rows
-            |> List.map (List.filter isCalled)
+            |> List.map (List.filter isUncalled)
             |> List.contains []
 
         let ver =
             rows
             |> List.transpose
-            |> List.map (List.filter isCalled)
+            |> List.map (List.filter isUncalled)
             |> List.contains []
 
         hor || ver
@@ -241,7 +241,41 @@ let advanceGame (game : GameState) =
             Boards = advance game callout
         }
     | _ -> failwith "whoops"
+    
+// let run (game : GameState) =
+//     let rec run' (game : GameState) =
+//         // match game.Callouts.Left with
+//         // | []  -> failwith "whoops"
+//         // | [x] -> run' (advanceGame game)
+//         // match game.Callouts.Left with
+//         // | [] -> game
+//         // | callout::rest ->
+//         //     run' (advanceGame game callout)
 
-testGame
-|> advanceGame
-|> printGame
+//     run' game
+
+// let advanceTimes (times : int) (game : GameState) =
+//     let rec advanceTimes' (game : GameState) (times : int) =
+//         if times = 0 then
+//             game
+//         else
+//             advanceTimes' (advanceGame game) (times - 1)
+
+//     advanceTimes' game times
+
+// let run x =
+//     testGame
+//     |> advanceTimes x
+//     |> printGame
+
+// let x = x + 1
+// run x
+
+// [
+//     [Uncalled 22; Uncalled 13; Uncalled 17; Uncalled 11; Uncalled 0];
+//     [Uncalled 8; Uncalled 2; Uncalled 23; Uncalled 4; Uncalled 24];
+//     [Uncalled 21; Uncalled 9; Uncalled 14; Uncalled 16; Uncalled 7];
+//     [Uncalled 6; Uncalled 10; Uncalled 3; Uncalled 18; Uncalled 5];
+//     [Uncalled 1; Uncalled 12; Uncalled 20; Uncalled 15; Uncalled 19]
+// ]
+// |> checkRows
