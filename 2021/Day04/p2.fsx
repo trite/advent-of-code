@@ -162,46 +162,77 @@ let (Callouts callouts, boards) = parse testList
 // |> advanceBoards boards
 // |> checkBoards
 
+let calcScore (Board board : Board) (lastCallout : int) =
+    let boardSum =
+        board
+        |> List.sumBy (
+            fun (Row row : Row) ->
+                row
+                |> List.sumBy (
+                    fun (num : int, b : bool) ->
+                        if b then
+                            0
+                        else
+                            num
+                )
+        )
+    board |> printfn "board debug: %A"
+    $"{boardSum} * {lastCallout} = {boardSum * lastCallout}"
+
+let sanityCheck (lst : 'a list) =
+    match lst with
+    | [] -> failwith "callout list is empty before it should be, check your logic!"
+    | _  -> lst
+
 // Wonder which approach is more idiomatic.
 // Taking tupled input avoids ||> or other extra steps, so going with it for now.
 // let runGame (Callouts callouts : Callouts) (Boards boards : Boards) =
 let runGame ((Callouts callouts : Callouts),(Boards boards : Boards)) =
-    let calcScore (Board board : Board) (lastCallout : int) =
-        let boardSum =
-            board
-            |> List.sumBy (
-                fun (Row row : Row) ->
-                    row
-                    |> List.sumBy (
-                        fun (num : int, b : bool) ->
-                            if b then
-                                0
-                            else
-                                num
-                    )
-            )
-        board |> printfn "board debug: %A"
-        $"{boardSum} * {lastCallout} = {boardSum * lastCallout}"
-
-    let sanityCheck (lst : 'a list) =
-        match lst with
-        | [] -> failwith "callout list is empty before it should be, check your logic!"
-        | _  -> lst
-
-    let rec runGame' ((callout : int) :: (rest : int list)) (boards : Boards) =
-        match advanceBoards boards callout |> checkBoards with
-        | Continue winnersRemoved -> runGame' (sanityCheck rest) winnersRemoved
-        | Solved winningBoard -> calcScore winningBoard callout
-
+    let rec runGame' (callouts : int list) (boards : Boards) =
+        match callouts with
+        | [] -> failwith "This shouldn't happen, you made a bad assumption somewhere!"
+        | callout :: rest ->
+            match advanceBoards boards callout |> checkBoards with
+            | Continue winnersRemoved -> runGame' (sanityCheck rest) winnersRemoved
+            | Solved winningBoard -> calcScore winningBoard callout
 
     boards
     |> sanityCheck
     |> Boards // I believe needing this is another symptom of my choice of types, can I make it suck less?
     |> runGame' callouts
 
-testList
-|> parse
-|> runGame
+let next ((Callouts callouts : Callouts),(boards : Boards)) =
+    match callouts with
+    | [] -> failwith "This shouldn't happen, you made a bad assumption somewhere!"
+    | callout :: rest ->
+        match advanceBoards boards callout |> checkBoards with
+        // | Continue winnersRemoved -> runGame' (sanityCheck rest) winnersRemoved
+        | Continue winnersRemoved -> (rest |> Callouts, winnersRemoved)
+        // | Solved winningBoard -> calcScore winningBoard callout
+        | Solved winningBoard -> failwith "This shouldn't happen, you made a bad assumption somewhere!"
+
+let debugPrint ((Callouts callouts : Callouts),(Boards boards : Boards)) =
+    // TODO: Need to properly list all of this out
+    $"""
+    Current callout: 
+    Previous callouts:
+    Remaining callouts:
+
+    Boards:
+    """
+
+let test = 
+    testList
+    |> parse
+
+// let test =
+//     test
+//     |> next
+
+// testList
+// |> parse
+// |> runGame
+
 // "161 * 16 = 2576"
 // "142 * 6 = 852"
 // I can only seem to get it to properly run on the iteration before or after the correct one for this part for some reason:
