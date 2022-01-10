@@ -213,6 +213,7 @@ let checkBoard (callout : int) (board : Board) =
                     | Uncalled x -> x
             )
         )
+        |> fun x -> x * callout
         |> Finished
 
     match board with
