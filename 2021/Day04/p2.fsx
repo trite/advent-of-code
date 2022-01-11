@@ -1,8 +1,3 @@
-type Callouts = Callouts of int list
-type Row = Row of (int * bool) list
-type Board = Board of Row list
-type Boards = Boards of Board list
-
 let testInput = """7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
 
 22 13 17 11  0
@@ -23,20 +18,36 @@ let testInput = """7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,
 22 11 13  6  5
  2  0 12  3  7"""
 
+type Callouts =
+    {
+        Done : int list
+        Left : int list
+    }
+
+type Cell =
+    | Uncalled of int
+    | Called of int
+
+type Row = Cell list
+
+type Board =
+    | Finished of score : int
+    | Unfinished of Row list
+
+type Boards = Board list
+
+type GameState =
+    {
+        Callouts : Callouts
+        Boards : Boards
+        Winner : Board option
+        Loser : Board option
+    }
+
 let split (c : char) (str : string) =
     str.Split c
     |> Array.toList
 
-let testList =
-    testInput
-    |> split '\n'
-
-type NextAction =
-    | Continue of Boards
-    | Solved of Board
-
-// Not sure the best approach here, borrowing from how I ended up splitting strings in haskell (2015 day 2 part 1)
-/// Split a string list into sub-lists, splitting on the specified string
 let splitOn (split : string) (lst : string list) =
     let rec splitOn' accList acc split (lst : string list) =
         match lst with
@@ -51,18 +62,20 @@ let splitOn (split : string) (lst : string list) =
                 splitOn' accList (x::acc) split xs
     splitOn' [] [] split lst
 
-/// Parses input info into a callout list and a board list
 let parse (lst : string list) =
     splitOn "" lst
     |> List.splitAt 1
     |> fun (cRaw,bRaw) ->
         let callouts =
-            cRaw
-            |> List.head
-            |> List.head
-            |> split ','
-            |> List.map int
-            |> Callouts
+            {
+                Done = []
+                Left =             
+                    cRaw
+                    |> List.head
+                    |> List.head
+                    |> split ','
+                    |> List.map int
+            }
 
         let boards =
             bRaw
@@ -70,182 +83,314 @@ let parse (lst : string list) =
                 List.map (
                     split ' '
                     >> List.filter (fun x -> x <> "")
-                    >> List.map (fun x -> (int x, false))
-                    >> Row
+                    >> List.map (fun x -> x |> int |> Uncalled)
+                    // >> List.map (fun x -> (int x, false))
                 )
-                >> Board
+                >> Unfinished
             )
-            |> Boards
-
-        (callouts, boards)
-
-let advanceBoards (Boards boards : Boards) (callout : int) =
-    boards
-    |> List.map (
-        fun (Board board : Board) ->
-            board
-            |> List.map (
-                fun (Row row : Row) ->
-                    row
-                    |> Map.ofList
-                    |> Map.change callout (Option.map (fun _ -> true))
-                    |> Map.toList
-                    |> Row
-            )
-            |> Board
-    )
-    |> Boards
-
-let checkBoards (Boards boards : Boards) =
-    let checkBoard (Board board : Board) =
-        let isEmpty lst =
-            (List.length lst) = 0
-
-        let winners (x : (int * bool) list) =
-            x
-            |> List.filter (fun (_,b) -> not b)
-            |> isEmpty
-
-        // this is only needed to deal with the type setup I created
-        // is there a better way to handle the types to skip work like this?
-        // might also be able to skip lots of the "boxing" steps (|> Boards/Board/Row)
-        let extract (Row row : Row) =
-            row
-
-        let extracted =
-            board
-            |> List.map extract
-
-        let checkWinners board =
-            board
-            |> List.filter winners
-            |> isEmpty
-            |> not
-
-        let checkRows =
-            extracted
-            |> checkWinners
-
-        let checkCols =
-            extracted
-            |> List.transpose
-            |> checkWinners
         
-        let result =
-            checkRows || checkCols
+        {
+            Callouts = callouts
+            Boards = boards
+            Winner = None
+            Loser = None
+        }
 
-        // if (result) then
-        //     printfn $"result was true, here's the board: {board}"
-        //     printfn $"checkRows: {checkRows} checkCols: {checkCols}"
-
-        result
-        
-    let remainingBoards =
-        boards
-        |> List.filter (checkBoard >> not)
-
-    printfn $"remaining boards: {remainingBoards}"
-
-    if (List.length remainingBoards) = 1 then
-        remainingBoards
-        |> List.head
-        |> Solved
-    else
-        remainingBoards
-        |> Boards
-        |> Continue
-
-let (Callouts callouts, boards) = parse testList
-
-// callouts
-// |> List.head
-// |> advanceBoards boards
-// |> checkBoards
-
-let calcScore (Board board : Board) (lastCallout : int) =
-    let boardSum =
-        board
-        |> List.sumBy (
-            fun (Row row : Row) ->
-                row
-                |> List.sumBy (
-                    fun (num : int, b : bool) ->
-                        if b then
-                            0
-                        else
-                            num
-                )
-        )
-    board |> printfn "board debug: %A"
-    $"{boardSum} * {lastCallout} = {boardSum * lastCallout}"
-
-let sanityCheck (lst : 'a list) =
-    match lst with
-    | [] -> failwith "callout list is empty before it should be, check your logic!"
-    | _  -> lst
-
-// Wonder which approach is more idiomatic.
-// Taking tupled input avoids ||> or other extra steps, so going with it for now.
-// let runGame (Callouts callouts : Callouts) (Boards boards : Boards) =
-let runGame ((Callouts callouts : Callouts),(Boards boards : Boards)) =
-    let rec runGame' (callouts : int list) (boards : Boards) =
-        match callouts with
-        | [] -> failwith "This shouldn't happen, you made a bad assumption somewhere!"
-        | callout :: rest ->
-            match advanceBoards boards callout |> checkBoards with
-            | Continue winnersRemoved -> runGame' (sanityCheck rest) winnersRemoved
-            | Solved winningBoard -> calcScore winningBoard callout
-
-    boards
-    |> sanityCheck
-    |> Boards // I believe needing this is another symptom of my choice of types, can I make it suck less?
-    |> runGame' callouts
-
-let next ((Callouts callouts : Callouts),(boards : Boards)) =
-    match callouts with
-    | [] -> failwith "This shouldn't happen, you made a bad assumption somewhere!"
-    | callout :: rest ->
-        match advanceBoards boards callout |> checkBoards with
-        // | Continue winnersRemoved -> runGame' (sanityCheck rest) winnersRemoved
-        | Continue winnersRemoved -> (rest |> Callouts, winnersRemoved)
-        // | Solved winningBoard -> calcScore winningBoard callout
-        | Solved winningBoard -> failwith "This shouldn't happen, you made a bad assumption somewhere!"
-
-let debugPrint ((Callouts callouts : Callouts),(Boards boards : Boards)) =
-    // TODO: Need to properly list all of this out
-    $"""
-    Current callout: 
-    Previous callouts:
-    Remaining callouts:
-
-    Boards:
-    """
-
-let test = 
-    testList
+let testGame = 
+    testInput
+    |> split '\n'
     |> parse
 
-// let test =
-//     test
-//     |> next
+let printGame (game : GameState) =
+    let previousCallouts (game : GameState) =
+        match game.Callouts.Done with
+        | [] -> "No callouts yet"
+        | [x] -> $"{x}"
+        | x::xs -> $"{x} => {xs}"
 
-// testList
-// |> parse
-// |> runGame
+    let printBoards (boards : Boards) =
+        let printCell (cell : Cell) =
+            match cell with
+            | Uncalled x -> $"[_{x,2}]"
+            | Called   x -> $"[X{x,2}]"
 
-// "161 * 16 = 2576"
-// "142 * 6 = 852"
-// I can only seem to get it to properly run on the iteration before or after the correct one for this part for some reason:
-// Correct answer for this part: 148 * 13 = 1924
+        let printBoard (board : Board) =
+            match board with
+            | Finished score ->
+                [ "|                           |";
+                  "|                           |";
+                 $"|     Done. Score: {score,-9}|";
+                  "|                           |";
+                  "|                           |"]
+            | Unfinished rows ->
+                rows
+                |> List.map (
+                    List.map printCell
+                    >> String.concat " "
+                )
+
+        boards
+        |> List.map printBoard
+        |> List.transpose
+        |> List.map (String.concat "     ")
+        |> fun x -> "\n" + (String.concat "\n" x)
+    
+    $"""
+    Previous callouts : {previousCallouts game}
+    Remaining callouts: {game.Callouts.Left}
+
+    Winner: {game.Winner}
+    Loser: {game.Loser}
+    """
+    // Boards: {printBoards game.Boards}
+    // """
+    |> printfn "%s"
+
+printGame testGame
+
+// Testing the printGame function for formatting, only planning to use this for the example for now so 3 boards should be the limit...
+printGame {
+    Callouts = {
+        Done = [1..10]
+        Left = [11..20]
+    }
+    Boards = [
+        Unfinished
+            [[Uncalled 22; Uncalled 13; Uncalled 17; Uncalled 11; Uncalled 0];
+             [Uncalled 8; Uncalled 2; Uncalled 23; Uncalled 4; Uncalled 24];
+             [Uncalled 21; Uncalled 9; Uncalled 14; Uncalled 16; Uncalled 7];
+             [Uncalled 6; Uncalled 10; Uncalled 3; Uncalled 18; Uncalled 5];
+             [Uncalled 1; Uncalled 12; Uncalled 20; Uncalled 15; Uncalled 19]];
+        Finished
+            42;
+        Unfinished
+            [[Uncalled 14; Uncalled 21; Uncalled 17; Uncalled 24; Uncalled 4];
+             [Uncalled 10; Uncalled 16; Uncalled 15; Uncalled 9; Uncalled 19];
+             [Uncalled 18; Uncalled 8; Uncalled 23; Uncalled 26; Uncalled 20];
+             [Uncalled 22; Uncalled 11; Uncalled 13; Uncalled 6; Uncalled 5];
+             [Uncalled 2; Uncalled 0; Uncalled 12; Uncalled 3; Uncalled 7]]]
+    Winner = None
+    Loser = None
+}
+
+let advanceBoard (callout : int) (board : Board) =
+    match board with
+    | Finished _ -> board
+    | Unfinished rows ->
+        rows
+        |> List.map (
+            List.map (
+                fun cell ->
+                    match cell with
+                    | Called x -> Called x
+                    | Uncalled x ->
+                        if x = callout then
+                            Called x
+                        else
+                            cell
+            )
+        )
+        |> Unfinished
+
+let checkBoard (callout : int) (board : Board) =
+    let isUncalled (cell : Cell) =
+        match cell with
+        | Called _ -> false
+        | Uncalled _ -> true
+
+    let checkRows (rows : Row list) =
+        let hor =
+            rows
+            |> List.map (List.filter isUncalled)
+            |> List.contains []
+
+        let ver =
+            rows
+            |> List.transpose
+            |> List.map (List.filter isUncalled)
+            |> List.contains []
+
+        hor || ver
+    
+    let calcScore (rows : Row list) =
+        rows
+        |> List.sumBy(
+            List.sumBy(
+                fun cell ->
+                    match cell with
+                    | Called   _ -> 0
+                    | Uncalled x -> x
+            )
+        )
+        |> fun x -> x * callout
+        |> Finished
+
+    match board with
+    | Finished score -> Finished score
+    | Unfinished rows ->
+        match checkRows rows with
+        | true -> calcScore rows
+        | false -> Unfinished rows
+        // rows
+        // |> List.transpose
+
+// let (|IsWinner|IsLoser|CarryOn|) (game : GameState) (board : Board) =
+//     match (game.Winner, game.Loser, board) with
+//     | None, None, Finished score ->
+//         { game with Winner = Finished score |> Some }
+//     | Some _, None, Finished score ->
+//         { game with Loser = Finished score |> Some }
+//     | _ -> failwith "Bad assumption somewhere"
+    
+
+let advanceGame (game : GameState) =
+    let advance (game : GameState) (callout : int) =
+        let newBoards =
+            game.Boards
+            |> List.map (advanceBoard callout)
+            |> List.map (checkBoard callout)
+        { game with Boards = newBoards}
+
+    match game.Callouts.Left with
+    | callout::rest ->
+        let result =
+            advance game callout
+
+        let countFinished (g : GameState) =
+            g.Boards
+            |> List.choose (
+                fun board ->
+                    match board with
+                    | Finished x   -> Some x
+                    | Unfinished _ -> None
+            )
+            |> List.length
+
+        let (|First|Last|Other|) ((current : GameState),(previous : GameState)) =
+            match (countFinished current, countFinished previous) with
+            | 1, 0 -> First
+            | x, _ when x = current.Boards.Length -> Last
+            | _, _ -> Other
+
+        match (result, game) with
+        | First ->
+            { game with
+                Callouts = {
+                    Done = callout::game.Callouts.Done
+                    Left = rest
+                }
+                Boards = result.Boards
+                Winner = 
+                    result.Boards
+                    |> List.choose (
+                        fun board ->
+                            match board with
+                            | Finished x   -> Finished x |> Some
+                            | Unfinished _ -> None
+                    )
+                    |> List.head
+                    |> Some
+            }
+        | Last ->
+            { game with
+                Callouts = {
+                    Done = callout::game.Callouts.Done
+                    Left = rest
+                }
+                Boards = result.Boards
+                Loser = // Finished 8675309 |> Some
+                    game.Boards
+                    |> List.choose (
+                        fun board ->
+                            match board with
+                            | Unfinished x -> Unfinished x |> Some
+                            | Finished _   -> None
+                    )
+                    |> List.head
+                    |> advanceBoard callout
+                    |> checkBoard callout
+                    |> Some
+            }
+        | Other ->
+            { game with
+                Callouts = {
+                    Done = callout::game.Callouts.Done
+                    Left = rest
+                }
+                Boards = result.Boards
+            }
+    | _ -> failwith "Ran out of callouts, check your logic!"
+
+// let run (game : GameState) =
+//     let rec run' (game : GameState) =
+//         match game.Callouts.Left with
+//         | []  -> game
+//         | [_] -> run' (advanceGame game)
+//         | _   -> failwith "Something went wrong"
+
+//     run' game
+
+// run testGame
+    
+// let run (game : GameState) =
+//     let rec run' (game : GameState) =
+//         // match game.Callouts.Left with
+//         // | []  -> failwith "whoops"
+//         // | [x] -> run' (advanceGame game)
+//         // match game.Callouts.Left with
+//         // | [] -> game
+//         // | callout::rest ->
+//         //     run' (advanceGame game callout)
+
+//     run' game
+
+
+// let x = x + 1
+// run x
+
+// [
+//     [Uncalled 22; Uncalled 13; Uncalled 17; Uncalled 11; Uncalled 0];
+//     [Uncalled 8; Uncalled 2; Uncalled 23; Uncalled 4; Uncalled 24];
+//     [Uncalled 21; Uncalled 9; Uncalled 14; Uncalled 16; Uncalled 7];
+//     [Uncalled 6; Uncalled 10; Uncalled 3; Uncalled 18; Uncalled 5];
+//     [Uncalled 1; Uncalled 12; Uncalled 20; Uncalled 15; Uncalled 19]
+// ]
+// |> checkRows
 
 
 
 
+let advanceTimes (times : int) (game : GameState) =
+    let rec advanceTimes' (times : int) (game : GameState) =
+        if times = 0 then
+            game
+        else
+            advanceTimes' (times - 1) (advanceGame game)
 
+    advanceTimes' times game
 
-// when ready to run:
-// System.IO.File.ReadLines("2021\\Day04\\input.txt")
-// |> Seq.toList
-// |> parse
-// |> runGame
-// // answer: 766 * 95 = 72770
+// let run x =
+//     testGame
+//     |> advanceTimes x
+//     |> printGame
+
+let realGame =
+    System.IO.File.ReadLines("2021\\Day04\\input.txt")
+    |> Seq.toList
+    |> parse
+ 
+let run x =
+    realGame
+    |> advanceTimes x
+    |> printGame 
+
+(*
+    > run 82;;
+
+    Previous callouts : 47 => [8; 76; 18; ... ]
+    Remaining callouts: [24; 81; 35; ... ]
+
+    Winner: Some(Finished 72770)
+    Loser: Some(Finished 13912)
+*)
+// Answer: 13912
