@@ -49,3 +49,18 @@ let parse (lst : string list) =
     )
 
 parse testList
+
+let newList length =
+    Array2D.zeroCreate length length
+
+let (|EqX|EqY|Other|) (coords : CoordPair) =
+    match (coords.x1, coords.x2, coords.y1, coords.y2) with
+    | (x1,x2,_,_) when x1 = x2 -> EqX
+    | (_,_,y1,y2) when y1 = y2 -> EqY
+    | _ -> Other
+
+let applyCoords (coords : CoordPair) (arr) =
+    match coords with
+    | EqX -> failwith "Need to implement this"
+    | EqY -> failwith "Need to implement this"
+    | Other -> failwith "Need to implement this"
