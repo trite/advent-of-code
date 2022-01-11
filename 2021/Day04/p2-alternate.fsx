@@ -40,6 +40,8 @@ type GameState =
     {
         Callouts : Callouts
         Boards : Boards
+        Winner : Board option
+        Loser : Board option
     }
 
 let split (c : char) (str : string) =
@@ -90,6 +92,8 @@ let parse (lst : string list) =
         {
             Callouts = callouts
             Boards = boards
+            Winner = None
+            Loser = None
         }
 
 let testGame = 
@@ -135,6 +139,9 @@ let printGame (game : GameState) =
     Previous callouts : {previousCallouts game}
     Remaining callouts: {game.Callouts.Left}
 
+    Winner: {game.Winner}
+    Loser: {game.Loser}
+
     Boards: {printBoards game.Boards}
     """
     |> printfn "%s"
@@ -162,6 +169,8 @@ printGame {
              [Uncalled 18; Uncalled 8; Uncalled 23; Uncalled 26; Uncalled 20];
              [Uncalled 22; Uncalled 11; Uncalled 13; Uncalled 6; Uncalled 5];
              [Uncalled 2; Uncalled 0; Uncalled 12; Uncalled 3; Uncalled 7]]]
+    Winner = None
+    Loser = None
 }
 
 let advanceBoard (callout : int) (board : Board) =
@@ -225,22 +234,103 @@ let checkBoard (callout : int) (board : Board) =
         // rows
         // |> List.transpose
 
+// let (|IsWinner|IsLoser|CarryOn|) (game : GameState) (board : Board) =
+//     match (game.Winner, game.Loser, board) with
+//     | None, None, Finished score ->
+//         { game with Winner = Finished score |> Some }
+//     | Some _, None, Finished score ->
+//         { game with Loser = Finished score |> Some }
+//     | _ -> failwith "Bad assumption somewhere"
+    
+
 let advanceGame (game : GameState) =
     let advance (game : GameState) (callout : int) =
-        game.Boards
-        |> List.map (advanceBoard callout)
-        |> List.map (checkBoard callout)
+        let newBoards =
+            game.Boards
+            |> List.map (advanceBoard callout)
+            |> List.map (checkBoard callout)
+        { game with Boards = newBoards}
 
     match game.Callouts.Left with
     | callout::rest ->
-        { game with
-            Callouts = {
-                Done = callout::game.Callouts.Done
-                Left = rest
+        let result =
+            advance game callout
+
+        let countFinished (g : GameState) =
+            g.Boards
+            |> List.choose (
+                fun board ->
+                    match board with
+                    | Finished x   -> Some x
+                    | Unfinished _ -> None
+            )
+            |> List.length
+
+        let (|First|Last|Other|) ((current : GameState),(previous : GameState)) =
+            match (countFinished current, countFinished previous) with
+            | 1, 0 -> First
+            | x, _ when x = current.Boards.Length -> Last
+            | _, _ -> Other
+
+        match (result, game) with
+        | First ->
+            { game with
+                Callouts = {
+                    Done = callout::game.Callouts.Done
+                    Left = rest
+                }
+                Boards = result.Boards
+                Winner = 
+                    result.Boards
+                    |> List.choose (
+                        fun board ->
+                            match board with
+                            | Finished x   -> Finished x |> Some
+                            | Unfinished _ -> None
+                    )
+                    |> List.head
+                    |> Some
             }
-            Boards = advance game callout
-        }
-    | _ -> failwith "whoops"
+        | Last ->
+            { game with
+                Callouts = {
+                    Done = callout::game.Callouts.Done
+                    Left = rest
+                }
+                Boards = result.Boards
+                Loser = // Finished 8675309 |> Some
+                    game.Boards
+                    |> List.choose (
+                        fun board ->
+                            match board with
+                            | Unfinished x -> Unfinished x |> Some
+                            | Finished _   -> None
+                    )
+                    |> List.head
+                    |> advanceBoard callout
+                    |> checkBoard callout
+                    |> Some
+            }
+        | Other ->
+            { game with
+                Callouts = {
+                    Done = callout::game.Callouts.Done
+                    Left = rest
+                }
+                Boards = result.Boards
+            }
+    | _ -> failwith "Ran out of callouts, check your logic!"
+
+// let run (game : GameState) =
+//     let rec run' (game : GameState) =
+//         match game.Callouts.Left with
+//         | []  -> game
+//         | [_] -> run' (advanceGame game)
+//         | _   -> failwith "Something went wrong"
+
+//     run' game
+
+// run testGame
     
 // let run (game : GameState) =
 //     let rec run' (game : GameState) =
@@ -254,19 +344,6 @@ let advanceGame (game : GameState) =
 
 //     run' game
 
-// let advanceTimes (times : int) (game : GameState) =
-//     let rec advanceTimes' (game : GameState) (times : int) =
-//         if times = 0 then
-//             game
-//         else
-//             advanceTimes' (advanceGame game) (times - 1)
-
-//     advanceTimes' game times
-
-// let run x =
-//     testGame
-//     |> advanceTimes x
-//     |> printGame
 
 // let x = x + 1
 // run x
@@ -279,3 +356,20 @@ let advanceGame (game : GameState) =
 //     [Uncalled 1; Uncalled 12; Uncalled 20; Uncalled 15; Uncalled 19]
 // ]
 // |> checkRows
+
+
+
+
+let advanceTimes (times : int) (game : GameState) =
+    let rec advanceTimes' (game : GameState) (times : int) =
+        if times = 0 then
+            game
+        else
+            advanceTimes' (advanceGame game) (times - 1)
+
+    advanceTimes' game times
+
+let run x =
+    testGame
+    |> advanceTimes x
+    |> printGame
