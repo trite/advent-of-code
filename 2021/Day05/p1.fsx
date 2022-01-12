@@ -55,13 +55,13 @@ let newList length =
 
 // Using active patterns as a form of self-documentation:
 let applyCoords (coords : CoordPair) (arr) =
-    let (|Horizontal|Vertical|Other|) (coords : CoordPair) =
+    let (|Horizontal|Vertical|DoNothing|) (coords : CoordPair) =
         match (coords.x1, coords.x2, coords.y1, coords.y2) with
         | (_,_,y1,y2) when y1 = y2 -> Horizontal
         | (x1,x2,_,_) when x1 = x2 -> Vertical
-        | _ -> Other
+        | _                        -> DoNothing
 
     match coords with
     | Horizontal -> failwith "Logic for horizontal lines goes here"
     | Vertical   -> failwith "Logic for vertial lines in this branch"
-    | Other -> failwith "Other lines will be ignored for part 1 in this branch"
+    | DoNothing  -> arr
