@@ -53,14 +53,15 @@ parse testList
 let newList length =
     Array2D.zeroCreate length length
 
-let (|EqX|EqY|Other|) (coords : CoordPair) =
-    match (coords.x1, coords.x2, coords.y1, coords.y2) with
-    | (x1,x2,_,_) when x1 = x2 -> EqX
-    | (_,_,y1,y2) when y1 = y2 -> EqY
-    | _ -> Other
-
+// Using active patterns as a form of self-documentation:
 let applyCoords (coords : CoordPair) (arr) =
+    let (|Horizontal|Vertical|Other|) (coords : CoordPair) =
+        match (coords.x1, coords.x2, coords.y1, coords.y2) with
+        | (_,_,y1,y2) when y1 = y2 -> Horizontal
+        | (x1,x2,_,_) when x1 = x2 -> Vertical
+        | _ -> Other
+
     match coords with
-    | EqX -> failwith "Need to implement this"
-    | EqY -> failwith "Need to implement this"
-    | Other -> failwith "Need to implement this"
+    | Horizontal -> failwith "Logic for horizontal lines goes here"
+    | Vertical   -> failwith "Logic for vertial lines in this branch"
+    | Other -> failwith "Other lines will be ignored for part 1 in this branch"
