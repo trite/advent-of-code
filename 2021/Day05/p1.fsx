@@ -54,7 +54,7 @@ let newList length =
     Array2D.zeroCreate length length
 
 // Using active patterns as a form of self-documentation:
-let applyCoords (coords : CoordPair) (arr) =
+let applyCoords (coords : CoordPair) arr =
     let (|Horizontal|Vertical|DoNothing|) (coords : CoordPair) =
         match (coords.x1, coords.x2, coords.y1, coords.y2) with
         | (_,_,y1,y2) when y1 = y2 -> Horizontal
