@@ -268,9 +268,9 @@ let advanceGame (game : GameState) =
 
         let (|First|Last|Other|) ((current : GameState),(previous : GameState)) =
             match (countFinished current, countFinished previous) with
-            | 1, 0 -> First
+            | 1, 0                                -> First
             | x, _ when x = current.Boards.Length -> Last
-            | _, _ -> Other
+            | _, _                                -> Other
 
         match (result, game) with
         | First ->
