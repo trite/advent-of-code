@@ -34,12 +34,12 @@ def changeDirection(direction: Cardinal, turn: Relative) -> Cardinal:
 def parse(instruction: str) -> Instruction:
     rest = int(instruction[1:])
     match instruction[0]:
-        case "R":
+        case 'R':
             return Instruction(Relative.Right, rest)
-        case "L":
+        case 'L':
             return Instruction(Relative.Left, rest)
         case _:
-            raise ValueError("You made a bad assumption somewhere...")
+            raise ValueError('You made a bad assumption somewhere...')
 
 def applyInstruction(state: State, instruction: Instruction) -> State:
     state.direction = changeDirection(state.direction, instruction.turn)
@@ -61,14 +61,14 @@ def calcDistance(state: State) -> int:
 
 
 
-f = open("2016\\Day01\\input.txt", "r")
+f = open('2016\\Day01\\input.txt', 'r')
 content = f.read()
 f.close()
 
-commands = content.split(", ")
+commands = content.split(', ')
 instructions = [parse(command) for command in commands]
 
-testing = parse("R2")
+testing = parse('R2')
 
 state = State()
 for instruction in instructions:
