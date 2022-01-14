@@ -39,7 +39,7 @@ def parse(instruction: str) -> Instruction:
         case 'L':
             return Instruction(Relative.Left, rest)
         case _:
-            raise ValueError('You made a bad assumption somewhere...')
+            raise Exception('You made a bad assumption somewhere...')
 
 def applyInstruction(state: State, instruction: Instruction) -> State:
     state.direction = changeDirection(state.direction, instruction.turn)

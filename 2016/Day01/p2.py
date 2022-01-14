@@ -42,7 +42,7 @@ def parse(instruction: str) -> Instruction:
         case 'L':
             return Instruction(Relative.Left, rest)
         case _:
-            raise ValueError('You made a bad assumption somewhere...')
+            raise Exception('You made a bad assumption somewhere...')
 
 def calcDistance(state: State) -> int:
     return abs(state.coords[0]) + abs(state.coords[1])
