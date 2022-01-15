@@ -40,9 +40,14 @@ def move(position: Position, direction: str) -> Position:
         return position
 
 def calc_code(position: Position) -> str:
-    return board[position[1]][position[0]]
+    result = board[position[0]][position[1]]
 
-def run_line(position: Position, line: str) -> Position:
+    if result is None:
+        raise Exception("This shouldn't be possible, check your logic!")
+    else:
+        return result
+
+def run_line(position: Position, line: str) -> tuple[Position, str]:
     for direction in line:
         position = move(position, direction)
 

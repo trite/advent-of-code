@@ -29,7 +29,7 @@ def changeDirection(direction: Cardinal, turn: Relative) -> Cardinal:
     elif updated > 3:
         updated = 0
 
-    return updated
+    return Cardinal(updated)
 
 def parse(instruction: str) -> Instruction:
     rest = int(instruction[1:])

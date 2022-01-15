@@ -32,7 +32,7 @@ def changeDirection(direction: Cardinal, turn: Relative) -> Cardinal:
     elif updated > 3:
         updated = 0
 
-    return updated
+    return Cardinal(updated)
 
 def parse(instruction: str) -> Instruction:
     rest = int(instruction[1:])
@@ -48,7 +48,7 @@ def calcDistance(state: State) -> int:
     return abs(state.coords[0]) + abs(state.coords[1])
 
 def transit(state: State, translation: Coords, distance: int) -> State:
-    for i in range(distance):
+    for _ in range(distance):
         state.coords = (state.coords[0] + translation[0],
             state.coords[1] + translation[1])
 
