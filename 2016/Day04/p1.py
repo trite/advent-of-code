@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 
 def count_chars(line: str) -> dict[str,int]:
-    counts = {}
+    counts: dict[str,int] = {}
 
     for char in line:
         counts[char] = counts.get(char, 0) + 1
