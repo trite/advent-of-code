@@ -4,10 +4,10 @@ testList = """ 5 10 25
   545  626  626
    84  910  149"""
 
-def run(rawList: str) -> list:
+def run(rawList: str) -> int:
     lines = rawList.split('\n')
 
-    def parse_line(line: str) -> list:
+    def parse_line(line: str) -> int:
         sides = [int(x) for x in line.split()]
         sides.sort()
         if sides[0] + sides[1] > sides[2]:

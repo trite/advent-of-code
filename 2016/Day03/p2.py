@@ -17,7 +17,7 @@ def transpose(toTranspose: list) -> list:
 
 # print(transpose([[1,2,3], [11,22,33], [111,222,333]]))
 
-def run(rawList: str) -> list:
+def run(rawList: str) -> int:
     total = 0
     lines = rawList.split('\n')
     stuff = [parse_line(line) for line in lines]
