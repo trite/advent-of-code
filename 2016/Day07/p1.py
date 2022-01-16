@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import TypeVar
 
-Network = str
+Supernet = str
 Hypernet = str
 
-GenNet = Network | Hypernet
+Network = Supernet | Hypernet
 
 # def TODO(note: str | None = None) -> None:
 #     todoMsg = 'This is still marked as TODO.'
@@ -15,7 +15,7 @@ GenNet = Network | Hypernet
 
 @dataclass
 class NetworkInfo:
-    networks : list[Network]
+    supernets: list[Supernet]
     hypernets: list[Hypernet]
 
 def strToList(toListify: str) -> list[str]:
@@ -26,9 +26,9 @@ def parseLine(line: str) -> NetworkInfo:
         if ']' in blah:
             vals = blah.split(']')
             data.hypernets.append(vals[0])
-            data.networks.append(vals[1])
+            data.supernets.append(vals[1])
         else:
-            data.networks.append(blah)
+            data.supernets.append(blah)
 
         return data
 
@@ -48,11 +48,11 @@ A = TypeVar('A')
 def windowed(lst: list[A], size: int) -> list[list[A]]:
     return [lst[i:i+size] for i in range(len(lst) - size + 1)]
 
-def validateNetwork(network: Network) -> bool:
-    if len(network) < 4:
+def validateSupernet(supernet: Supernet) -> bool:
+    if len(supernet) < 4:
         return False # too short to contain an ABBA
 
-    for a,b,c,d in windowed(strToList(network), 4):
+    for a,b,c,d in windowed(strToList(supernet), 4):
         if (a != b) & (b == c) & (a == d):
             return True # found ABBA, which means its a valid network
         else:
@@ -76,8 +76,8 @@ def validate(info: NetworkInfo) -> bool:
     networkResult = False
     hypernetResult = True
 
-    for network in info.networks:
-        networkResult |= validateNetwork(network)
+    for supernet in info.supernets:
+        networkResult |= validateSupernet(supernet)
 
     for hypernet in info.hypernets:
         hypernetResult &= validateHypernet(hypernet)
