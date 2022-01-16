@@ -1,8 +1,3 @@
-# from hashlib import md5
-
-# print(md5('abc3231929'.encode()).hexdigest())
-
-
 def md5(toHash: str) -> str:
     import hashlib
     return hashlib.md5(toHash.encode()).hexdigest()
