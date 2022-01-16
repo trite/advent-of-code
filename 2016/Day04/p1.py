@@ -53,10 +53,13 @@ def run (rawList: str) -> int:
         for line in lines
         if (x := parse_line(line)).actualChecksum == x.checksum])
 
-print(f'test data: {run(testList)}')
+print(f'test result: {run(testList)}')
 
 f = open('2016\\Day04\\input.txt', 'r')
 lines = f.read()
 result = run(lines)
 
 print(f'actual result: {result}')
+
+# test result: 1514
+# actual result: 361724
