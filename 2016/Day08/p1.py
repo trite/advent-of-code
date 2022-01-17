@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import TypeVar
 
+
 @dataclass
 class Screen:
     width: int
