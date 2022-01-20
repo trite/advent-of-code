@@ -73,5 +73,51 @@ def initial_state() -> State:
         Bot(2): [Value(2)]
     })
 
+def give_value_to_bot(state: State, bot: Bot, value: Value) -> State:
+    match state.get(bot, []):
+        case [] | [_] as lst:
+            lst.append(value)
+
+        case ohNo:
+            raise Exception(f"Expected an empty or single-item list, but found: {ohNo}")
+    
+    return state
+
+def give_value_to_output(state: State, output: Output, value: Value) -> State:
+    """Leaving this here in case it is used in p2, for now it just eats values. Om nom nom."""
+    return state
+
+def give_value_to_target(state: State, target: Target, value: Value) -> State:
+    match target:
+        case Bot() as bot:
+            return give_value_to_bot(state, bot, value)
+            
+        case Output() as output:
+            return give_value_to_output(state, output, value)
+
+        case other:
+            raise Exception(f"Target was an unexpected type! {other}")
+
+def from_bot_to_target(state: State, source: Bot, low: Target, high: Target) -> State:
+    # fromBot = state.get(source, [])
+    match state.get(source, []):
+        case [_, _] as lst:
+            state = give_value_to_target(state, low, min(lst))
+            state = give_value_to_target(state, high, max(lst))
+            state[source] = []
+
+        case ohNo:
+            raise Exception(f"Expected a list with 2 items, but found: {ohNo}")
+
+    return state
+
 def apply_command(state: State, command: Command) -> State:
-    # TODO: resume here
+    match command:
+        case CmdValToBot(value, target):
+            return give_value_to_target(state, target, value)
+
+        case CmdBotToTarget(source, low, high):
+            return from_bot_to_target(state, source, low, high)
+
+        case other:
+            raise Exception(f"Unexpected command type!: {other}")
