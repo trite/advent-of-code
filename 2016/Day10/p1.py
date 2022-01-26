@@ -1,6 +1,10 @@
 from dataclasses import dataclass
+from functools import partial
+from typing import Tuple
 
-class Value(int): pass
+# This problem isn't complicated enough to warrant all the extra type work I was doing
+
+class Value(str): pass
 class Bot(int): pass
 class Output(int): pass
 
@@ -21,9 +25,7 @@ class CmdBotToTarget:
     lowTarget: Target
     highTarget: Target
 
-Command = CmdValToBot | CmdBotToTarget
-
-def parse_line(line: str) -> Command:
+def parse_line(line: str) -> CmdValToBot | CmdBotToTarget:
     def parse_bot_target(targetType: str, targetValue: str) -> Target:
         match targetType, targetValue:
             case 'output', x:
@@ -47,6 +49,25 @@ def parse_line(line: str) -> Command:
 
     raise Exception(f"Couldn't parse this one for some reason: {line}")
 
+def parse_lines(rawLines: str) -> Tuple[list[CmdValToBot], list[CmdBotToTarget], list[Bot]]:
+    valCmds: list[CmdValToBot] = []
+    botCmds: list[CmdBotToTarget] = []
+    botList: list[Bot] = []
+
+    for line in rawLines.split('\n'):
+        match parse_line(line):
+            case CmdValToBot() as cmd:
+                valCmds.append(cmd)
+
+            case CmdBotToTarget() as cmd:
+                botCmds.append(cmd)
+                botList.append(cmd.sourceBot)
+
+            case other:
+                raise Exception(f'Check your logic, this should only ever be a command! {other}')
+    
+    return (valCmds, botCmds, botList)
+
 testStr = """value 5 goes to bot 2
 bot 2 gives low to bot 1 and high to bot 0
 value 3 goes to bot 1
@@ -54,70 +75,71 @@ bot 1 gives low to output 1 and high to bot 0
 bot 0 gives low to output 2 and high to output 0
 value 2 goes to bot 2"""
 
-# print(list(map(parse_line, testStr.split('\n'))))
+# print(parse_lines(testStr))
+"""
+([
+    CmdValToBot(value='5', targetBot=2),
+    CmdValToBot(value='3', targetBot=1),
+    CmdValToBot(value='2', targetBot=2)
+],
+[
+    CmdBotToTarget(sourceBot=2, lowTarget=1, highTarget=0), 
+    CmdBotToTarget(sourceBot=1, lowTarget=1, highTarget=0), 
+    CmdBotToTarget(sourceBot=0, lowTarget=2, highTarget=0)
+])
+"""
 
-"""
-[CmdValToBot(value=5, targetBot=2),
- CmdBotToTarget(sourceBot=2, lowTarget=1, highTarget=0),
- CmdValToBot(value=3, targetBot=1),
- CmdBotToTarget(sourceBot=1, lowTarget=1, highTarget=0),
- CmdBotToTarget(sourceBot=0, lowTarget=2, highTarget=0),
- CmdValToBot(value=2, targetBot=2)]
-"""
+# Next steps:
+# while any bots in botCommands do not have 2 items in state:
+#     loop through state:
+#         if the length of the list is 2:
+#             find that bot in botCommands, and give its values out appropriately
 
 class State(dict[Bot, list[Value]]): pass
+state = State({})
 
-def initial_state() -> State:
-    return State({
-        Bot(1): [Value(3)],
-        Bot(2): [Value(2)]
-    })
+def is_bot_done(state: State, bot: Bot) -> bool:
+    return len(state.get(bot, [])) != 2
 
-def give_value_to_bot(state: State, bot: Bot, value: Value) -> State:
-    match state.get(bot, []):
-        case [] | [_] as lst:
-            lst.append(value)
+def any_left(state: State, bots: list[Bot]) -> bool:
+    bot_check = partial(is_bot_done, state)
+    return any(map(bot_check, bots))
 
-        case ohNo:
-            raise Exception(f"Expected an empty or single-item list, but found: {ohNo}")
-    
+def give_value_to_bot(state: State, val: Value, bot: Bot) -> State:
+    current = state.get(bot, [])
+
+    if val not in current:
+        current.append(val)
+
+    if len(current) > 2:
+        raise Exception(f'Value list for this bot exceeded 2! bot: {bot}, bot list: {current}, current val: {val}')
+
+    # state[bot] = current # TODO: check if `current` is a reference in this case, this line might be unnecessary
     return state
 
-def give_value_to_output(state: State, output: Output, value: Value) -> State:
-    """Leaving this here in case it is used in p2, for now it just eats values. Om nom nom."""
-    return state
-
-def give_value_to_target(state: State, target: Target, value: Value) -> State:
+def give_value_to_target(state: State, target: Target, val: Value) -> State:
     match target:
         case Bot() as bot:
-            return give_value_to_bot(state, bot, value)
-            
-        case Output() as output:
-            return give_value_to_output(state, output, value)
+            return give_value_to_bot(state, val, bot)
+        case Output(): # as output:
+            # Do nothing for now, probably needed in part 2?
+            return state
 
-        case other:
-            raise Exception(f"Target was an unexpected type! {other}")
+def run_iter(state: State, cmds: list[CmdBotToTarget]) -> State:
+    def run_cmd(state: State, cmd: CmdBotToTarget) -> State:
+        if is_bot_done(state, cmd.sourceBot):
+            state = give_value_to_target(state, cmd.lowTarget,  min(state[cmd.sourceBot]))
+            state = give_value_to_target(state, cmd.highTarget, max(state[cmd.sourceBot]))
+        return state
 
-def from_bot_to_target(state: State, source: Bot, low: Target, high: Target) -> State:
-    # fromBot = state.get(source, [])
-    match state.get(source, []):
-        case [_, _] as lst:
-            state = give_value_to_target(state, low, min(lst))
-            state = give_value_to_target(state, high, max(lst))
-            state[source] = []
-
-        case ohNo:
-            raise Exception(f"Expected a list with 2 items, but found: {ohNo}")
+    for cmd in cmds:
+        run_cmd(state, cmd)
 
     return state
+    
 
-def apply_command(state: State, command: Command) -> State:
-    match command:
-        case CmdValToBot(value, target):
-            return give_value_to_target(state, target, value)
+valCmds, botCmds, botList = parse_lines(testStr)
 
-        case CmdBotToTarget(source, low, high):
-            return from_bot_to_target(state, source, low, high)
-
-        case other:
-            raise Exception(f"Unexpected command type!: {other}")
+# Steps now:
+# apply all `valCmds` to state first
+# then run_iter on state using botCmds and make sure things look right with the test data
