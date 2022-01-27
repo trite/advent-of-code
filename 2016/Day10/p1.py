@@ -4,7 +4,7 @@ from typing import Tuple
 
 # This problem isn't complicated enough to warrant all the extra type work I was doing
 
-class Value(str): pass
+class Value(int): pass
 class Bot(int): pass
 class Output(int): pass
 
@@ -213,3 +213,5 @@ for bot, vals in state.items():
 # Val 17 to Bot 142 - ['47', '17'] <== 142 should've receved 2, its comparing strings, duh
 
 
+# actual answer this time
+# Answer: 118 ([61, 17])
