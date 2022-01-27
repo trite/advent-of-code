@@ -2,14 +2,17 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Tuple
 
-# This problem isn't complicated enough to warrant all the extra type work I was doing
-
 class Value(int): pass
 class Bot(int): pass
 class Output(int): pass
 
-# In this configuration with Target as the key type in a dictionary Python is just treating them as ints
-# TODO: Need to investigate more into how Python Unions actually work in this regard
+"""
+TODO: Investigate Union behavior more
+    * Bot and Output both inherit from int
+    * Target is a union of Bot/Output
+    * Bot(4) and Output(4) collide in this case, since they both occupy int(4)
+    * Could this be as simple as changing the hashing behaviors?
+"""
 
 Target = Bot | Output
 
@@ -92,13 +95,6 @@ value 2 goes to bot 2"""
 ])
 """
 
-# Next steps:
-# while any bots in botCommands do not have 2 items in state:
-#     loop through state:
-#         if the length of the list is 2:
-#             find that bot in botCommands, and give its values out appropriately
-
-# class State(dict[Bot, list[Value]]): pass
 @dataclass
 class State:
     bots: dict[Bot, list[Value]]
@@ -126,7 +122,6 @@ def give_value_to_bot(state: State, val: Value, bot: Bot) -> State:
     if len(current) > 2:
         raise Exception(f'Value list for this bot exceeded 2! bot: {bot}, bot list: {current}, current val: {val}')
 
-    # state[bot] = current # TODO: check if `current` is a reference in this case, this line might be unnecessary
     return state
 
 def give_value_to_output(state: State, val: Value, output: Output) -> State:
@@ -146,7 +141,6 @@ def give_value_to_target(state: State, target: Target, val: Value) -> State:
         case Output() as output:
             return give_value_to_output(state, val, output)
 
-# def run_iter(state: State, cmds: list[CmdBotToTarget]) -> State:
 def run_iter(cmds: list[CmdBotToTarget], state: State) -> State:
     def run_cmd(state: State, cmd: CmdBotToTarget) -> State:
         if is_bot_done(state, cmd.sourceBot):
@@ -165,15 +159,6 @@ def apply_vals(state: State, cmds: list[CmdValToBot]) -> State:
 
     return state
 
-
-
-
-
-
-# Steps now:
-# apply all `valCmds` to state first
-# then run_iter on state using botCmds and make sure things look right with the test data
-
 """
 valCmds, botCmds, botList = parse_lines(testStr)
 
@@ -190,57 +175,28 @@ iter = partial(run_iter, botCmds)
 # {2: ['5', '2'], 1: ['3', '2'], 0: ['5', '3']}
 """
 
-
 with open('2016\\Day10\\input.txt', 'r') as f:
     fileContent = f.read()
 
 valCmds, botCmds, botList = parse_lines(fileContent)
-
 state = apply_vals(State({}, {}), valCmds)
 
 print(state)
 
-iter = partial(run_iter, botCmds)
-
 while any_left(state, botList):
-    state = iter(state)
-
-print(state)
-# print(dict(filter(lambda vals: (Value(61) in vals) & (Value(17) in vals),
-#     state.items())))
+    state = run_iter(botCmds, state)
 
 for bot, vals in state.bots.items():
     if (Value(61) in vals) & (Value(17) in vals):
         print(f'Answer p1: {bot} ({vals})')
 
-# Wrong answer apparently...
-# Answer: 83 (['61', '17'])
-
-# Enter interactive mode for some poking around:
-# import code
-# code.interact(local=locals())
-
-
-# Val 17 to Bot 4 - ['53', '17']
-# Val 17 to Bot 171 - ['31', '17']
-# Val 17 to Bot 150 - ['37', '17']
-# Val 17 to Bot 25 - ['29', '17']
-# Val 17 to Bot 92 - ['2', '17']
-# Val 17 to Bot 142 - ['47', '17'] <== 142 should've receved 2, its comparing strings, duh
-
-
-# actual answer this time
 # Answer (part 1): 118 ([61, 17])
 
 def out_val(state: State, output: int):
     return int(state.outputs[Output(output)])
 
 o = partial(out_val, state)
-
 p2 = o(0) * o(1) * o(2)
-
 print(f'Part 2 answer: {p2}')
-
-print(f'0: {o(0)}, 1: {o(1)}, 2: {o(2)}')
 
 # Part 2 answer: 143153
