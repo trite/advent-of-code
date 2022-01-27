@@ -8,6 +8,9 @@ class Value(int): pass
 class Bot(int): pass
 class Output(int): pass
 
+# In this configuration with Target as the key type in a dictionary Python is just treating them as ints
+# TODO: Need to investigate more into how Python Unions actually work in this regard
+
 Target = Bot | Output
 
 @dataclass
@@ -95,26 +98,30 @@ value 2 goes to bot 2"""
 #         if the length of the list is 2:
 #             find that bot in botCommands, and give its values out appropriately
 
-class State(dict[Bot, list[Value]]): pass
+# class State(dict[Bot, list[Value]]): pass
+@dataclass
+class State:
+    bots: dict[Bot, list[Value]]
+    outputs: dict[Output, Value]
 
 def is_bot_done(state: State, bot: Bot) -> bool:
-    return len(state.get(bot, [])) == 2
+    return len(state.bots.get(bot, [])) == 2
 
 def is_bot_still_going(state: State, bot: Bot) -> bool:
-    return len(state.get(bot, [])) != 2
+    return len(state.bots.get(bot, [])) != 2
 
 def any_left(state: State, bots: list[Bot]) -> bool:
     bot_check = partial(is_bot_still_going, state)
     return any(map(bot_check, bots))
 
 def give_value_to_bot(state: State, val: Value, bot: Bot) -> State:
-    current = state.get(bot, [])
+    current = state.bots.get(bot, [])
 
     if val not in current:
         current.append(val)
-        state[bot] = current
+        state.bots[bot] = current
         if (val == Value('61')) | (val == Value('17')):
-            print(f'Val {val} to Bot {bot} - {state[bot]}')
+            print(f'Val {val} to Bot {bot} - {state.bots[bot]}')
 
     if len(current) > 2:
         raise Exception(f'Value list for this bot exceeded 2! bot: {bot}, bot list: {current}, current val: {val}')
@@ -122,20 +129,29 @@ def give_value_to_bot(state: State, val: Value, bot: Bot) -> State:
     # state[bot] = current # TODO: check if `current` is a reference in this case, this line might be unnecessary
     return state
 
+def give_value_to_output(state: State, val: Value, output: Output) -> State:
+    current = state.outputs.get(output, None)
+
+    if (current != None) & (current != val):
+        raise Exception(f'Output {output} currently has value: {state.outputs[output]}, trying to add {val}')
+
+    state.outputs[output] = val
+
+    return state
+
 def give_value_to_target(state: State, target: Target, val: Value) -> State:
     match target:
         case Bot() as bot:
             return give_value_to_bot(state, val, bot)
-        case Output(): # as output:
-            # Do nothing for now, probably needed in part 2?
-            return state
+        case Output() as output:
+            return give_value_to_output(state, val, output)
 
 # def run_iter(state: State, cmds: list[CmdBotToTarget]) -> State:
 def run_iter(cmds: list[CmdBotToTarget], state: State) -> State:
     def run_cmd(state: State, cmd: CmdBotToTarget) -> State:
         if is_bot_done(state, cmd.sourceBot):
-            state = give_value_to_target(state, cmd.lowTarget,  min(state[cmd.sourceBot]))
-            state = give_value_to_target(state, cmd.highTarget, max(state[cmd.sourceBot]))
+            state = give_value_to_target(state, cmd.lowTarget,  min(state.bots[cmd.sourceBot]))
+            state = give_value_to_target(state, cmd.highTarget, max(state.bots[cmd.sourceBot]))
         return state
 
     for cmd in cmds:
@@ -180,7 +196,7 @@ with open('2016\\Day10\\input.txt', 'r') as f:
 
 valCmds, botCmds, botList = parse_lines(fileContent)
 
-state = apply_vals(State({}), valCmds)
+state = apply_vals(State({}, {}), valCmds)
 
 print(state)
 
@@ -193,9 +209,9 @@ print(state)
 # print(dict(filter(lambda vals: (Value(61) in vals) & (Value(17) in vals),
 #     state.items())))
 
-for bot, vals in state.items():
+for bot, vals in state.bots.items():
     if (Value(61) in vals) & (Value(17) in vals):
-        print(f'Answer: {bot} ({vals})')
+        print(f'Answer p1: {bot} ({vals})')
 
 # Wrong answer apparently...
 # Answer: 83 (['61', '17'])
@@ -214,4 +230,17 @@ for bot, vals in state.items():
 
 
 # actual answer this time
-# Answer: 118 ([61, 17])
+# Answer (part 1): 118 ([61, 17])
+
+def out_val(state: State, output: int):
+    return int(state.outputs[Output(output)])
+
+o = partial(out_val, state)
+
+p2 = o(0) * o(1) * o(2)
+
+print(f'Part 2 answer: {p2}')
+
+print(f'0: {o(0)}, 1: {o(1)}, 2: {o(2)}')
+
+# Part 2 answer: 143153
