@@ -96,13 +96,15 @@ value 2 goes to bot 2"""
 #             find that bot in botCommands, and give its values out appropriately
 
 class State(dict[Bot, list[Value]]): pass
-state = State({})
 
 def is_bot_done(state: State, bot: Bot) -> bool:
+    return len(state.get(bot, [])) == 2
+
+def is_bot_still_going(state: State, bot: Bot) -> bool:
     return len(state.get(bot, [])) != 2
 
 def any_left(state: State, bots: list[Bot]) -> bool:
-    bot_check = partial(is_bot_done, state)
+    bot_check = partial(is_bot_still_going, state)
     return any(map(bot_check, bots))
 
 def give_value_to_bot(state: State, val: Value, bot: Bot) -> State:
@@ -110,6 +112,9 @@ def give_value_to_bot(state: State, val: Value, bot: Bot) -> State:
 
     if val not in current:
         current.append(val)
+        state[bot] = current
+        if (val == Value('61')) | (val == Value('17')):
+            print(f'Val {val} to Bot {bot} - {state[bot]}')
 
     if len(current) > 2:
         raise Exception(f'Value list for this bot exceeded 2! bot: {bot}, bot list: {current}, current val: {val}')
@@ -125,7 +130,8 @@ def give_value_to_target(state: State, target: Target, val: Value) -> State:
             # Do nothing for now, probably needed in part 2?
             return state
 
-def run_iter(state: State, cmds: list[CmdBotToTarget]) -> State:
+# def run_iter(state: State, cmds: list[CmdBotToTarget]) -> State:
+def run_iter(cmds: list[CmdBotToTarget], state: State) -> State:
     def run_cmd(state: State, cmd: CmdBotToTarget) -> State:
         if is_bot_done(state, cmd.sourceBot):
             state = give_value_to_target(state, cmd.lowTarget,  min(state[cmd.sourceBot]))
@@ -137,9 +143,73 @@ def run_iter(state: State, cmds: list[CmdBotToTarget]) -> State:
 
     return state
     
+def apply_vals(state: State, cmds: list[CmdValToBot]) -> State:
+    for cmd in cmds:
+        state = give_value_to_bot(state, cmd.value, cmd.targetBot)
 
-valCmds, botCmds, botList = parse_lines(testStr)
+    return state
+
+
+
+
+
 
 # Steps now:
 # apply all `valCmds` to state first
 # then run_iter on state using botCmds and make sure things look right with the test data
+
+"""
+valCmds, botCmds, botList = parse_lines(testStr)
+
+state = apply_vals(State({}), valCmds)
+
+print(state)
+print('=========')
+
+iter = partial(run_iter, botCmds)
+
+# print(iter(state))
+# {2: ['5', '2'], 1: ['3']}
+# =========
+# {2: ['5', '2'], 1: ['3', '2'], 0: ['5', '3']}
+"""
+
+
+with open('2016\\Day10\\input.txt', 'r') as f:
+    fileContent = f.read()
+
+valCmds, botCmds, botList = parse_lines(fileContent)
+
+state = apply_vals(State({}), valCmds)
+
+print(state)
+
+iter = partial(run_iter, botCmds)
+
+while any_left(state, botList):
+    state = iter(state)
+
+print(state)
+# print(dict(filter(lambda vals: (Value(61) in vals) & (Value(17) in vals),
+#     state.items())))
+
+for bot, vals in state.items():
+    if (Value(61) in vals) & (Value(17) in vals):
+        print(f'Answer: {bot} ({vals})')
+
+# Wrong answer apparently...
+# Answer: 83 (['61', '17'])
+
+# Enter interactive mode for some poking around:
+# import code
+# code.interact(local=locals())
+
+
+# Val 17 to Bot 4 - ['53', '17']
+# Val 17 to Bot 171 - ['31', '17']
+# Val 17 to Bot 150 - ['37', '17']
+# Val 17 to Bot 25 - ['29', '17']
+# Val 17 to Bot 92 - ['2', '17']
+# Val 17 to Bot 142 - ['47', '17'] <== 142 should've receved 2, its comparing strings, duh
+
+
