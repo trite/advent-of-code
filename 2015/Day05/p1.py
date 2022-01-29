@@ -1,6 +1,5 @@
 from typing import TypeVar
 
-
 def validate_vowels(toValidate: str) -> bool:
     def vowel(char: str) -> bool:
         match char:
@@ -11,32 +10,17 @@ def validate_vowels(toValidate: str) -> bool:
 
     return len(list(filter(vowel, toValidate))) >= 3
 
-# print(validate_vowels('aei'))
-# print(validate_vowels('xazegov'))
-# print(validate_vowels('aeiaeiouaeiouaeiou'))
-
 A = TypeVar('A')
 
 def windowed(lst: list[A], size: int) -> list[list[A]]:
     return [lst[i:i+size] for i in range(len(lst) - size + 1)]
 
 def validate_double(toValidate: str) -> bool:
-    blah = windowed([x for x in toValidate], 2)
-    for x,y in blah:
-        if x == y:
-            return True
-
-    return False
-
-# print(validate_double('abcdde'))
-# print(validate_double('aabbccdd'))
+    segments = windowed([x for x in toValidate], 2)
+    return any([x == y for x,y in segments])
 
 def validate_special(toValidate: str) -> bool:
-    for x in ['ab', 'cd', 'pq', 'xy']:
-        if x in toValidate:
-            return False
-
-    return True
+    return not any([x in toValidate for x in ['ab', 'cd', 'pq', 'xy']])
 
 def validate(toValidate: str) -> bool:
     return all([
@@ -44,12 +28,6 @@ def validate(toValidate: str) -> bool:
         validate_double(toValidate),
         validate_special(toValidate)
     ])
-
-# print(validate('ugknbfddgicrmopn'))
-# print(validate('aaa'))
-# print(validate('jchzalrnumimnmhp'))
-# print(validate('haegwjzuvuyypxyu'))
-# print(validate('dvszwmarrgswjxmb'))
 
 with open('2015\\Day05\\input.txt', 'r') as f:
     content = f.read()
