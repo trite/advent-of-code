@@ -3,23 +3,19 @@ import hashlib, itertools
 def md5(s: str) -> str:
     return hashlib.md5(s.encode()).hexdigest()
 
-def solve_p1(key: str) -> int:
-    # result = 1
-
-    # while True:
-    #     if md5(key + str(result)).startswith('00000'):
-    #         break
-    #     result += 1
+def solve(key: str, zeroCount: int) -> int:
+    zeroes = ''.join(['0' for _ in range(zeroCount)])
 
     for x in itertools.count(start=1):
-        if md5(key + str(x)).startswith('00000'):
+        if md5(key + str(x)).startswith(zeroes):
             return x
 
-    raise Exception(f'This should be unreachable...')
-
-# print(solve_p1('abcdef'))
+    raise Exception('This should be unreachable...')
 
 content = 'ckczppom'
 
-print(f'P1 answer: {solve_p1(content)}')
+print(f'P1 answer: {solve(content, 5)}')
 # P1 answer: 117946
+
+print(f'P1 answer: {solve(content, 6)}')
+# P1 answer: 3938038
