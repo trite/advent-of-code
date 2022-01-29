@@ -36,19 +36,19 @@ def windowed(lst: list[A], size: int) -> list[list[A]]:
     """
     return [lst[i:i+size] for i in range(len(lst) - size + 1)]
 
-def split_list_chunks(toSplit: list[A], count: int) -> list[list[A]]:
+def chunk_list(toSplit: list[A], countPerChunk: int) -> list[list[A]]:
     """
-        >>> split_list(list(range(10)), 5)
+        >>> chunk_list(list(range(10)), 5)
         [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]]
-        >>> split_list(list(range(10)), 2) 
+        >>> chunk_list(list(range(10)), 2) 
         [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]]
     """
-    blah = [toSplit[i:i+count] for i in range(0, len(toSplit), count)]
+    blah = [toSplit[i:i+countPerChunk] for i in range(0, len(toSplit), countPerChunk)]
     return blah
 
-def split_list_bisect(toSplit: list[A], splitAt: int) -> Tuple[list[A], list[A]]:
+def split_list(toSplit: list[A], splitAt: int) -> Tuple[list[A], list[A]]:
     """
-        >>> split_list_bisect(list(range(10)), 2)
+        >>> split_list(list(range(10)), 2)
         ([0, 1], [2, 3, 4, 5, 6, 7, 8, 9])
     """
     return toSplit[:splitAt], toSplit[splitAt:]
