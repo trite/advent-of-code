@@ -36,6 +36,7 @@ with open('2015\\Day01\\input.txt', 'r') as f:
     content = f.read()
 
 print(f'P1 answer: {run_p1(content)}')
+# P1 answer: 232
 
 def run_p2(toRun: str) -> int:
     floor = 0
@@ -51,3 +52,4 @@ def run_p2(toRun: str) -> int:
     raise Exception("Shouldn't have reached this point!")
 
 print(f'P2 answer: {run_p2(content)}')
+# P2 answer: 1783
