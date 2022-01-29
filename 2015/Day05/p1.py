@@ -22,7 +22,7 @@ def validate_double(toValidate: str) -> bool:
 def validate_special(toValidate: str) -> bool:
     return not any([x in toValidate for x in ['ab', 'cd', 'pq', 'xy']])
 
-def validate(toValidate: str) -> bool:
+def validate_p1(toValidate: str) -> bool:
     return all([
         validate_vowels(toValidate),
         validate_double(toValidate),
@@ -32,7 +32,7 @@ def validate(toValidate: str) -> bool:
 with open('2015\\Day05\\input.txt', 'r') as f:
     content = f.read()
 
-p1 = len(list(filter(validate, content.split('\n'))))
+p1 = len(list(filter(validate_p1, content.split('\n'))))
 
 print(f'P1 answer: {p1}')
 # P1 answer: 258
