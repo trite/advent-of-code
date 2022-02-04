@@ -1,19 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal, Tuple
-from PIL import Image
-import numpy
-
-test = Image.new(mode="L", size=(100,100))
-# test.show()
-# test2 = Image.fromarray(numpy.array("i", [x for x in range(10000)]), "L") # type: ignore
-
-# size = 1000
-# numpy.random.seed(1)
-# arr = numpy.random.rand(size, size)
-arr = numpy.fromfunction(lambda x, y: y / 1000, (1000, 1000), dtype = float) # type: ignore
-Image.fromarray(arr, mode='L').show() # type: ignore
-
-# test2.show()
+from PIL import Image, ImageDraw
 
 Position = Tuple[int,int]
 
@@ -57,3 +44,24 @@ def parse_line(line: str) -> Command:
         case other:
             raise Exception(f'Unable to parse: {other}')
 
+imgFolder = '2015/Day06/python/images'
+
+im = Image.new('RGB', (1000, 1000), (0, 0, 0))
+draw = ImageDraw.Draw(im)
+
+cmds = list(map(parse_line, testCmds))
+
+for cmd in cmds:
+    match cmd:
+        case Command("On", start, end):
+            fill = (255, 255, 255)
+        case Command("Off", start, end):
+            fill = (255, 255, 255)
+        case Command("Toggle", start, end):
+            fill = (255, 255, 255)
+        case other:
+            raise Exception(f"Unable to handle command! {other}")
+
+# draw.rectangle((0, 0, 999, 999), fill=(255, 255, 255))
+
+im.save(f'{imgFolder}/p1_test_01.jpg', quality=95)
