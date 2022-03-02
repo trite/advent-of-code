@@ -1,3 +1,5 @@
+{-# ANN module "HLint: ignore Eta reduce" #-}
+
 basement' :: Int -- ^ Current character counter
   -> Int -- ^ Current floor number
   -> String -- ^ Rest of the characters
@@ -12,7 +14,7 @@ basement' ct flr (x:rest)
 basement' ct _ [] = ct
 
 basement :: String -> Int
-basement = basement' 0 0
+basement str = basement' 0 0 str
 
 -- >>> basement ")"
 -- 1
