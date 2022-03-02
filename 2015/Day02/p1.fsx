@@ -26,18 +26,13 @@ let calcSqFt (dimensionsStr : string) : int =
         fun (a,b,c) -> 3*a*b + 2*a*c + 2*b*c
 
     doCalc dimensionsStr calculation
-    // let dimensions = convert dimensionsStr
-
-    // match dimensions with
-    // | [a;b;c] -> 3*a*b + 2*a*c + 2*b*c
-    // | _       -> failwith $"This should only ever be 3 elements, but instead was {dimensions.Length}! Check your logic."
 
 let testPt1 (dimensionsStr : string) (expectedResult : int) : unit =
     let result = calcSqFt dimensionsStr
     if result <> expectedResult then
         failwith $"Expected {expectedResult} but received {result}"
 
-// Is there a better way to do this?
+// Sanity check
 testList
 |> Map.iter testPt1
 
@@ -47,10 +42,6 @@ let runCalculation (calc : string -> int) : int=
     |> List.map calc
     |> List.sum
 
-// System.IO.File.ReadLines("2015\\Day02\\input.txt")
-// |> Seq.toList
-// |> List.map calcSqFt
-// |> List.sum
 runCalculation calcSqFt
 |> printfn "Part 1 answer: %A"
 // Part 1 answer: 1606483
@@ -60,11 +51,6 @@ let calcRibbon (dimensionsStr : string) : int =
         fun (a,b,c) -> 2*a + 2*b + a*b*c
 
     doCalc dimensionsStr calculation
-    // let dimensions = convert dimensionsStr
-
-    // match dimensions with
-    // | [a;b;c] -> 2*a + 2*b + a*b*c
-    // | _       -> failwith $"This should only ever be 3 elements!"
 
 runCalculation calcRibbon
 |> printfn "Part 2 answer: %A"
