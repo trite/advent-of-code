@@ -25,7 +25,7 @@ floorNum :: String -> Int
 floorNum str = lParen str - rParen str
 
 failures :: Map String Int -> Map String Int
-failures = filterWithKey (\ k v -> v /= floorNum k)
+failures lst = filterWithKey (\ k v -> v /= floorNum k) lst
 
 -- >>> failures testing
 -- fromList []
