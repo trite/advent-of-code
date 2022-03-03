@@ -14,16 +14,16 @@ let convert (dimensionsStr : string) : int list =
     |> List.sort
 
 
-let doCalc (dimensionsStr : string) (calculation : int * int * int -> int) : int =
+let doCalc (dimensionsStr : string) (calculation : int -> int -> int -> int) : int =
     let dimensions = convert dimensionsStr
 
     match dimensions with
-    | [a;b;c] -> calculation (a,b,c)
+    | [a;b;c] -> calculation a b c
     | _       -> failwith $"This should only ever be 3 elements, but instead was {dimensions.Length}! Check your logic."
 
 let calcSqFt (dimensionsStr : string) : int =
     let calculation =
-        fun (a,b,c) -> 3*a*b + 2*a*c + 2*b*c
+        fun a b c -> 3*a*b + 2*a*c + 2*b*c
 
     doCalc dimensionsStr calculation
 
@@ -48,7 +48,7 @@ runCalculation calcSqFt
 
 let calcRibbon (dimensionsStr : string) : int =
     let calculation =
-        fun (a,b,c) -> 2*a + 2*b + a*b*c
+        fun a b c -> 2*a + 2*b + a*b*c
 
     doCalc dimensionsStr calculation
 
