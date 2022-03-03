@@ -36,7 +36,7 @@ let testPt1 (dimensionsStr : string) (expectedResult : int) : unit =
 testList
 |> Map.iter testPt1
 
-let runCalculation (calc : string -> int) : int=
+let runCalculation (calc : string -> int) : int =
     System.IO.File.ReadLines("2015\\Day02\\input.txt")
     |> Seq.toList
     |> List.map calc
