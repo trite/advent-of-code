@@ -19,7 +19,7 @@ checkPairs (x:rest) = False
 checkPairs [] = False
 
 twoPairs :: Eq t => [t] -> Bool
-twoPairs = checkPairs . pairOff
+twoPairs lst = checkPairs $ pairOff lst
 {-
 >>> map twoPairs ["xyxy", "aabcdefgaa", "aaa"]
 [True,True,False]
